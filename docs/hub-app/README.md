@@ -26,6 +26,8 @@ separate, later work — not built yet. `Settings` is deliberately reachable
 whether logged in or not, since a fresh install needs to be able to point
 at a non-default server before an identity even exists.
 
+Tests live in `apps/hub-app/tests/`, mirroring the `src/` paths they cover, the same layout as `apps/hub`.
+
 ## In this folder
 
 Nothing yet beyond this overview — once guild/friends/chat views land,
