@@ -44,7 +44,7 @@ list (`Home`, `Friends`, `Guild(s)`, `Achievements`, `Messages`, `Profile`,
 
 ## Related projects
 
-- [`backend-server` (protocol repo)](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/README.md) — everything the Hub
+- [`backend-server` (protocol repo)](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/README.md) — everything the Hub
   reads and writes goes through this; the Hub has no backend of its own.
 - [`avalon-common-ui`](https://github.com/avalon-initiative/avalon-common-ui) — the shared Vue3 component library the Hub is
   built from, alongside [`../hub-app/`](../hub-app/README.md).

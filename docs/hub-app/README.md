@@ -43,5 +43,5 @@ notifications) rather than duplicating Hub content that's identical here.
   this project in feature coverage.
 - [`avalon-common-ui`](https://github.com/avalon-initiative/avalon-common-ui) — the shared component library both Hub apps
   are built from.
-- [`backend-server` (protocol repo)](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/README.md) — what this talks to,
+- [`backend-server` (protocol repo)](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/README.md) — what this talks to,
   same as the Hub, with no backend of its own.
