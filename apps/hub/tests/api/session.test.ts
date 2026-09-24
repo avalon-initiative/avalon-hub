@@ -15,7 +15,7 @@ vi.mock('@avalon-initiative/protocol-sdk', () => ({
   },
 }))
 
-import { useSessionStore } from './session'
+import { useSessionStore } from '../../src/api/session'
 
 const fakeSession = { token: () => 'tok-1', identity: () => ({ id: 'id-1' }) }
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import router from './index'
-import { useSessionStore } from '../api/session'
+import router from '../../src/router/index'
+import { useSessionStore } from '../../src/api/session'
 
 beforeEach(async () => {
   setActivePinia(createPinia())

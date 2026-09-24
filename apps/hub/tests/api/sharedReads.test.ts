@@ -4,7 +4,7 @@ import {
   cachedRead,
   invalidateGuildReadsOnLeave,
   invalidateSharedReads,
-} from './sharedReads'
+} from '../../src/api/sharedReads'
 
 beforeEach(() => {
   vi.useFakeTimers()
