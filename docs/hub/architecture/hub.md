@@ -4,14 +4,14 @@
 to `avalon-server` through the same API, authentication, and capability model as
 any integrator or third-party client, has no backend of its own, and holds no
 privilege another authorized client couldn't have. Narrative in
-[Proposal: Hub & Clients](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/stakeholders/Proposal.md#hub--clients).
+[Proposal: Hub & Clients](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/stakeholders/Proposal.md#hub--clients).
 
 ## The world outside the integrators
 
 The Hub is where a user interacts with the network itself, with no integrator open:
 
 - create and manage a persistent identity; connect keys or a wallet where that
-  applies ([identity](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/identity.md))
+  applies ([identity](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/identity.md))
 - profile and identity-controlled metadata
 - friends and presence
 - guilds and guild chat
@@ -25,7 +25,7 @@ The Hub is where a user interacts with the network itself, with no integrator op
 
 It is not a launcher, a store, a distribution platform, or an integrator authority. It
 does not own the integrators it lists. Steam + Roblox + universal launcher is the shape
-to avoid (see [Proposal: Current Limitations & Non-Goals](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/stakeholders/Proposal.md#current-limitations--non-goals)).
+to avoid (see [Proposal: Current Limitations & Non-Goals](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/stakeholders/Proposal.md#current-limitations--non-goals)).
 
 ## One client among several
 
@@ -33,7 +33,7 @@ Because the Hub uses only the public API, other clients are possible by
 construction: web, mobile, desktop, a Discord integration, an integrator's native UI, a
 third-party application. `apps/hub-app` is the first proof — the same UI in a
 Tauri shell for desktop and mobile, for guild chat and presence without an integrator
-running (see [Proposal: Hub & Clients](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/stakeholders/Proposal.md#hub--clients)).
+running (see [Proposal: Hub & Clients](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/stakeholders/Proposal.md#hub--clients)).
 A user who never installs any Hub loses nothing at the protocol level.
 
 Rules that keep this true:
@@ -67,20 +67,20 @@ deferred — they depend on a visibility/preference store that doesn't exist
 yet, described under "What's built today" below. The Hub never implies
 Avalon has judged one more prestigious than another, and a revoked claim
 shows as revoked with its history, not as a gap. See the
-[trust model](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/trust-model.md) and
-[revocation](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/revocation.md).
+[trust model](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/trust-model.md) and
+[revocation](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/revocation.md).
 
 ## Hub and guilds
 
 Guilds are network primitives, so the Hub is their natural client: create, join,
 leave, manage roles, chat, see members and their presence, see which integrators
 members are playing, view history, coordinate across integrators. A guild is unaffected
-by any integrator shutting down. See [guilds](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/guilds.md).
+by any integrator shutting down. See [guilds](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/guilds.md).
 
 ## Hub and integrator discovery
 
 A directory of integrators connected to Avalon and a profile page per integrator, rendering
-[registry](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/registry.md) facts with their definitions and class labels
+[registry](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/registry.md) facts with their definitions and class labels
 (durable-derived / realtime / self-reported), issuer status and key history, and
 recognition relationships. Sort options are explicit and neutral; there is no
 score and no trust-derived "recommended" ordering. A suspended or revoked issuer
@@ -142,7 +142,7 @@ relative paths into `../src`. New tests go in `tests/`, not next to the source.
 Identity creation and login are their own pre-authenticated pages
 (`CreateIdentity.vue`, `Login.vue`), backed by a real WebAuthn passkey
 ceremony plus a separate Ed25519 signing key — see
-[identity](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/identity.md) for the crypto/API
+[identity](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/identity.md) for the crypto/API
 layer underneath. `Profile.vue` is an avatar/name/handle hero with log out,
 editable profile fields, and device setup/recovery/pending-approval/device-list
 cards. `RecoverIdentity.vue` is the guardian-based recovery flow's entry
@@ -245,9 +245,9 @@ The Hub's full request surface spans identity/session endpoints (WebAuthn
 registration and login, profile), friends and presence, guild
 CRUD/membership/roles/channels/chat, integrator discovery and registry
 reads, and connection/grant management. See
-[identity](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/identity.md),
-[guilds](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/guilds.md), and
-[registry](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/registry.md) for the endpoint-level
+[identity](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/identity.md),
+[guilds](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/guilds.md), and
+[registry](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/projects/backend-server/architecture/registry.md) for the endpoint-level
 detail behind each domain.
 
 ### Request volume

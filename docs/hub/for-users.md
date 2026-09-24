@@ -3,7 +3,7 @@
 This page is for you if you're a player or user of a game, app, or service
 that connects to Avalon — not a developer, not someone hosting a server.
 No jargon assumed; if a word here doesn't make sense, check the
-[glossary](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/GLOSSARY.md).
+[glossary](https://github.com/avalon-initiative/avalon-protocol/blob/main/docs/GLOSSARY.md).
 
 ## What the Hub is for
 
