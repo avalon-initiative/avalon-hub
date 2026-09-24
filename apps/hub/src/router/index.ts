@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useSessionStore } from '../api/session'
+import { invalidateGuildReadsOnLeave } from '../api/sharedReads'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -119,5 +120,7 @@ router.beforeEach((to) => {
   }
   return true
 })
+
+router.afterEach((_to, from) => invalidateGuildReadsOnLeave(from.name))
 
 export default router

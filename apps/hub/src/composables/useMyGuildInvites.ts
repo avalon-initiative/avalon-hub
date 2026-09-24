@@ -6,6 +6,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import type { MyGuildInvite } from '@avalon-initiative/protocol-sdk'
 import { useSessionStore } from '../api/session'
+import { cachedRead } from '../api/sharedReads'
 
 const POLL_INTERVAL_MS = 5 * 60_000
 
@@ -38,11 +39,11 @@ export function useMyGuildInvites() {
 
   let pollHandle: ReturnType<typeof setInterval> | undefined
 
-  async function refresh() {
+  async function load(force: boolean) {
     const s = session.session
     if (!s) return
     try {
-      const rows = await s.myGuildInvites()
+      const rows = await cachedRead('guilds:invites', () => s.myGuildInvites(), { force })
       invites.value = Array.isArray(rows) ? rows : []
       await resolveInviterNames(invites.value)
     } catch (e) {
@@ -50,8 +51,10 @@ export function useMyGuildInvites() {
     }
   }
 
+  const refresh = () => load(true)
+
   onMounted(async () => {
-    await refresh()
+    await load(false)
     loading.value = false
     pollHandle = setInterval(refresh, POLL_INTERVAL_MS)
   })
