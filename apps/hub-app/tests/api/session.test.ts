@@ -1,14 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
-const { FakeUnauthorized, resume, resumeWithKey } = vi.hoisted(() => ({
+const { FakeUnauthorized, FakeRateLimited, resume, resumeWithKey } = vi.hoisted(() => ({
   FakeUnauthorized: class extends Error {},
+  FakeRateLimited: class extends Error {
+    constructor(public retryAfterSeconds?: number) {
+      super('rate limited')
+    }
+  },
   resume: vi.fn(),
   resumeWithKey: vi.fn(),
 }))
 
 vi.mock('@avalon-initiative/protocol-sdk', () => ({
   UnauthorizedError: FakeUnauthorized,
+  RateLimitedError: FakeRateLimited,
   AvalonClient: class {
     resumeAccountSession = resume
     resumeAccountSessionWithSigningKey = resumeWithKey
@@ -141,5 +147,49 @@ describe('session store', () => {
     expect(store.data).toEqual({})
     expect(localStorage.getItem('avalon:signingKey:id-1')).toBeNull()
     expect(s.isAuthenticated()).toBe(false)
+  })
+})
+
+describe('session store resume backoff', () => {
+  const startResume = () => {
+    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': 'id-1' }))
+    const s = useSessionStore()
+    return { s, done: s.initialize() }
+  }
+
+  it('waits the server Retry-After before the next attempt', async () => {
+    vi.useFakeTimers()
+    resume.mockRejectedValueOnce(new FakeRateLimited(4)).mockResolvedValue(fakeSession)
+    const { done } = startResume()
+    await vi.advanceTimersByTimeAsync(3999)
+    expect(resume).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    await done
+    expect(resume).toHaveBeenCalledTimes(2)
+    vi.useRealTimers()
+  })
+
+  it('caps an oversized Retry-After', async () => {
+    vi.useFakeTimers()
+    resume.mockRejectedValueOnce(new FakeRateLimited(60)).mockResolvedValue(fakeSession)
+    const { done } = startResume()
+    await vi.advanceTimersByTimeAsync(9999)
+    expect(resume).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    await done
+    expect(resume).toHaveBeenCalledTimes(2)
+    vi.useRealTimers()
+  })
+
+  it('falls back to the doubling backoff when no Retry-After was sent', async () => {
+    vi.useFakeTimers()
+    resume.mockRejectedValueOnce(new FakeRateLimited()).mockResolvedValue(fakeSession)
+    const { done } = startResume()
+    await vi.advanceTimersByTimeAsync(999)
+    expect(resume).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    await done
+    expect(resume).toHaveBeenCalledTimes(2)
+    vi.useRealTimers()
   })
 })
