@@ -1,0 +1,30 @@
+# Node / npm workspaces
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# Tauri (apps/hub-app)
+apps/hub-app/src-tauri/target/
+apps/hub-app/src-tauri/gen/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+*.key
+
+# Logs and packaged output
+logs/
+*.log
+*.tgz
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*~

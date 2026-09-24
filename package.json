@@ -1,0 +1,15 @@
+{
+  "name": "avalon-hub-workspace",
+  "private": true,
+  "description": "npm workspace root for the Avalon Hub applications: apps/hub (the web app) and apps/hub-app (the Tauri desktop and mobile app). Both talk to an avalon-server only through @avalon-initiative/protocol-sdk and share @avalon-initiative/common-ui.",
+  "workspaces": [
+    "apps/*"
+  ],
+  "devDependencies": {
+    "eslint": "^10.0.1",
+    "@eslint/js": "^10.0.1",
+    "typescript-eslint": "^8.70.0",
+    "eslint-plugin-vue": "^10.11.0",
+    "globals": "^17.12.0"
+  }
+}
