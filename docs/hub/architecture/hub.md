@@ -231,3 +231,14 @@ reads, and connection/grant management. See
 [guilds](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/guilds.md), and
 [registry](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/registry.md) for the endpoint-level
 detail behind each domain.
+
+### Request volume
+
+The shell loads its own data once on mount and refreshes it on a 30 second poll,
+not per route change. Reads that the shell and pages both need (a member's guild
+memberships, guild metadata and pending guild invites) go through
+`apps/hub/src/api/sharedReads.ts`, a 30 second cache that also shares in-flight
+requests. Poll ticks and each page's own `refresh()` bypass the cache, so anything
+a user just changed is re-read from the server, and leaving a guild page drops the
+guild entries. On a Home, Friends, Guilds, Home sequence with two guilds this
+takes the guild reads from 4 requests on the Guilds page and 3 on Home to none.

@@ -12,6 +12,7 @@ import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
 import { AvalonClient, UnauthorizedError, type AccountSession } from '@avalon-initiative/protocol-sdk'
 import { getServerUrl } from './serverUrl'
+import { invalidateSharedReads } from './sharedReads'
 import { loadSigningKeySeed, clearSigningKeySeed } from './signingKeyStorage'
 
 const TOKEN_STORAGE_KEY = 'avalon:session:token'
@@ -38,6 +39,7 @@ export const useSessionStore = defineStore('accountSession', () => {
   }
 
   async function initialize() {
+    invalidateSharedReads()
     const token = localStorage.getItem(TOKEN_STORAGE_KEY)
     if (token) {
       const identityId = localStorage.getItem(IDENTITY_ID_STORAGE_KEY)
@@ -62,12 +64,14 @@ export const useSessionStore = defineStore('accountSession', () => {
    * identity id. Every login/register/recovery/device-pairing flow calls
    * this once it has a working `AccountSession`. */
   function setSession(newSession: AccountSession) {
+    invalidateSharedReads()
     session.value = newSession
     persist(newSession)
   }
 
   async function logout() {
     const identityId = session.value?.identity().id
+    invalidateSharedReads()
     session.value = null
     clearStorage()
     if (identityId) clearSigningKeySeed(identityId)
