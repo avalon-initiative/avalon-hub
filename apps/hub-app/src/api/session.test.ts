@@ -84,10 +84,49 @@ describe('session store', () => {
     const store2 = memoryStore({ 'avalon:session:token': 'tok-2' })
     configureSessionStorage(store2)
     resume.mockRejectedValue(new Error('network down'))
+    vi.useFakeTimers()
     const s = useSessionStore()
-    await s.initialize()
+    const done = s.initialize()
+    await vi.runAllTimersAsync()
+    await done
+    vi.useRealTimers()
     expect(store2.data['avalon:session:token']).toBe('tok-2')
     expect(s.isAuthenticated()).toBe(false)
+    expect(s.resumeFailed).toBe(true)
+  })
+
+  it('retries a transient failure with backoff and recovers without flagging a failure', async () => {
+    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1' }))
+    resume.mockRejectedValueOnce(new Error('429')).mockRejectedValueOnce(new Error('503')).mockResolvedValue(fakeSession)
+    vi.useFakeTimers()
+    const s = useSessionStore()
+    const done = s.initialize()
+    await vi.runAllTimersAsync()
+    await done
+    vi.useRealTimers()
+    expect(resume).toHaveBeenCalledTimes(3)
+    expect(s.isAuthenticated()).toBe(true)
+    expect(s.resumeFailed).toBe(false)
+  })
+
+  it('makes a bounded number of attempts and does not retry a rejected token', async () => {
+    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1' }))
+    resume.mockRejectedValue(new Error('503'))
+    vi.useFakeTimers()
+    const s = useSessionStore()
+    const done = s.initialize()
+    await vi.runAllTimersAsync()
+    await done
+    vi.useRealTimers()
+    expect(resume).toHaveBeenCalledTimes(3)
+
+    setActivePinia(createPinia())
+    resume.mockReset()
+    resume.mockRejectedValue(new FakeUnauthorized())
+    const s2 = useSessionStore()
+    await s2.initialize()
+    expect(resume).toHaveBeenCalledTimes(1)
+    expect(s2.resumeFailed).toBe(false)
   })
 
   it('persists credentials on setSession and clears them (and the key) on logout', async () => {

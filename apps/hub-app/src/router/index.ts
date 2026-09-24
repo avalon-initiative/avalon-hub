@@ -13,6 +13,11 @@ const router = createRouter({
       component: () => import('../views/Login.vue'),
       beforeEnter: () => (useSessionStore().isAuthenticated() ? '/home' : true),
     },
+    {
+      path: '/session-unavailable',
+      name: 'session-unavailable',
+      component: () => import('../views/SessionUnavailable.vue'),
+    },
     { path: '/login', name: 'login', component: () => import('../views/Login.vue') },
     {
       path: '/create-identity',
@@ -42,7 +47,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (to.meta.requiresAuth && !useSessionStore().isAuthenticated()) {
+  const session = useSessionStore()
+  if (to.meta.requiresAuth && !session.isAuthenticated()) {
+    // A stored token whose resume failed transiently is not a logout.
+    if (session.resumeFailed) return { name: 'session-unavailable', query: { redirect: to.fullPath } }
     return { name: 'login' }
   }
   return true
