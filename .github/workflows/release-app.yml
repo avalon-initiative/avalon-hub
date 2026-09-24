@@ -1,0 +1,73 @@
+name: Release desktop/mobile app
+
+# Pushing an app-v<X.Y.Z>[-title] tag (created by `make release-app`) verifies the
+# tag, runs the app's checks, builds the Tauri bundles for Linux, and attaches
+# them to a GitHub Release. macOS and Windows bundles are added as further matrix
+# entries when those platforms are signed and supported. Written for when Actions
+# is enabled on this repository.
+on:
+  push:
+    tags: ["app-v*"]
+
+permissions:
+  contents: write
+  packages: read
+
+concurrency:
+  group: release-app-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Require the tagged commit to be on main
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "Tag ${GITHUB_REF_NAME} is not on main; refusing to release."; exit 1; }
+
+      - name: Verify tag matches the version files
+        run: bash scripts/verify-release-version.sh "${GITHUB_REF_NAME}"
+
+      - name: Install Tauri Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libayatana-appindicator3-dev \
+            librsvg2-dev patchelf pkg-config
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/hub-app/src-tauri
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Checks
+        run: bash scripts/release-checks.sh app
+
+      - name: Build Tauri bundles
+        run: npm run tauri build -w apps/hub-app
+
+      - name: Create GitHub Release
+        run: |
+          shopt -s nullglob
+          files=(apps/hub-app/src-tauri/target/release/bundle/deb/*.deb apps/hub-app/src-tauri/target/release/bundle/appimage/*.AppImage apps/hub-app/src-tauri/target/release/bundle/rpm/*.rpm)
+          gh release create "${GITHUB_REF_NAME}" "${files[@]}" --title "${GITHUB_REF_NAME}" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
