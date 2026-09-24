@@ -14,7 +14,7 @@
 // screen instead of the login page.
 import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
-import { AvalonClient, UnauthorizedError, type AccountSession } from '@avalon-initiative/protocol-sdk'
+import { AvalonClient, RateLimitedError, UnauthorizedError, type AccountSession } from '@avalon-initiative/protocol-sdk'
 import { getServerUrl } from './serverUrl'
 import { getSessionStorage } from './sessionStorage'
 import { clearSigningKeySeed, loadSigningKeySeed } from './signingKeyStorage'
@@ -25,8 +25,18 @@ const IDENTITY_ID_STORAGE_KEY = 'avalon:session:identityId'
 // Attempts made by one initialize(); the delay doubles between attempts.
 export const RESUME_ATTEMPTS = 3
 export const RESUME_BASE_DELAY_MS = 1000
+// Upper bound on a server-requested Retry-After between resume attempts.
+export const RESUME_MAX_RETRY_AFTER_MS = 10_000
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+/** The server's Retry-After when it sent one (capped), else the doubling backoff. */
+function retryDelayMs(error: unknown, attempt: number): number {
+  if (error instanceof RateLimitedError && error.retryAfterSeconds !== undefined) {
+    return Math.min(error.retryAfterSeconds * 1000, RESUME_MAX_RETRY_AFTER_MS)
+  }
+  return RESUME_BASE_DELAY_MS * 2 ** (attempt - 1)
+}
 
 export function avalonClient(): AvalonClient {
   return new AvalonClient({ serverUrl: getServerUrl() })
@@ -80,7 +90,7 @@ export const useSessionStore = defineStore('accountSession', () => {
           await clearStorage()
           return false
         }
-        if (attempt < RESUME_ATTEMPTS) await sleep(RESUME_BASE_DELAY_MS * 2 ** (attempt - 1))
+        if (attempt < RESUME_ATTEMPTS) await sleep(retryDelayMs(e, attempt))
       }
     }
     return true
