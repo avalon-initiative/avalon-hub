@@ -40,7 +40,7 @@ export default tseslint.config(
       },
     },
     rules: {
-      // Repo convention (.claude/CLAUDE.md): no <style> blocks in .vue
+      // Repo convention: no <style> blocks in .vue
       // files, ever — styling lives in a co-located .module.scss. This is
       // the exact convention violation this ticket asked lint to catch,
       // not just rely on manual review for.
