@@ -128,9 +128,9 @@ const GITHUB_PROFILE_URL = 'https://github.com/avalon-initiative'
 // transfer happens, not before (issues/contributing/release links below
 // all derive from this and would 404 against an org repo that doesn't
 // exist yet).
-const GITHUB_REPO_URL = 'https://github.com/LunarVagabond/avalon-protocol'
-const GITHUB_ISSUES_URL = `${GITHUB_REPO_URL}/issues/new?template=bug_report.yml`
-const CONTRIBUTING_URL = `${GITHUB_REPO_URL}/blob/main/.github/CONTRIBUTING.md`
+const GITHUB_REPO_URL = 'https://github.com/avalon-initiative/avalon-hub'
+const GITHUB_ISSUES_URL = `${GITHUB_REPO_URL}/issues/new`
+const CONTRIBUTING_URL = 'https://github.com/avalon-initiative/.github/blob/main/CONTRIBUTING.md'
 
 // `__BUILD_REVISION__`/`__BUILD_IS_RELEASE__` come from vite.config.ts's
 // `define` — the exact tag when built from a release, a short commit hash otherwise.
