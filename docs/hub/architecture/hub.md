@@ -119,6 +119,16 @@ reverts. Actions that need input (add a friend, recover with a phrase) sit
 behind a button that reveals the form. Login and Create Identity are the
 exception, since entering an id/name is the whole screen.
 
+### Source layout and tests
+
+Both apps split `src/` by concern: `views/` and `components/` hold only `.vue`
+files, `styles/` only `.module.scss`, and `.ts` logic lives in `api/`,
+`composables/`, `utils/` and similar folders. Tests do not live in `src/`: each
+app has a top-level `tests/` tree that mirrors the source path it covers
+(`src/views/Home.vue` is tested by `tests/views/Home.test.ts`), with shared test
+doubles in `apps/hub/tests/testing/`. Tests import the code under test through
+relative paths into `../src`. New tests go in `tests/`, not next to the source.
+
 ### Identity, login, and recovery
 
 Identity creation and login are their own pre-authenticated pages
