@@ -5,9 +5,9 @@
 //
 // Storage is plain localStorage. `initialize()` does a real GET /me round trip
 // (constructing an AccountSession requires one). Only an actual
-// UnauthorizedError clears the stored session; a network or transient failure
-// leaves storage untouched and `session.value` null for this load, so a later
-// reload can retry rather than logging a viewer out over a flaky connection.
+// UnauthorizedError clears the stored session; any other failure is retried a
+// bounded number of times, then leaves storage untouched and sets `resumeFailed`
+// so the router shows a retry screen instead of the login page.
 import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
 import { AvalonClient, UnauthorizedError, type AccountSession } from '@avalon-initiative/protocol-sdk'
@@ -18,6 +18,12 @@ import { loadSigningKeySeed, clearSigningKeySeed } from './signingKeyStorage'
 const TOKEN_STORAGE_KEY = 'avalon:session:token'
 const IDENTITY_ID_STORAGE_KEY = 'avalon:session:identityId'
 
+// Attempts made by one initialize(); the delay doubles between attempts.
+export const RESUME_ATTEMPTS = 3
+export const RESUME_BASE_DELAY_MS = 1000
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
 export function avalonClient(): AvalonClient {
   return new AvalonClient({ serverUrl: getServerUrl() })
 }
@@ -27,6 +33,8 @@ export const useSessionStore = defineStore('accountSession', () => {
   // False until `initialize()` resolves; main.ts awaits it once before
   // mounting, so route guards and every other call site see final state.
   const ready = ref(false)
+  // True when a stored token exists but resuming failed for a reason other than rejection.
+  const resumeFailed = ref(false)
 
   function persist(newSession: AccountSession) {
     localStorage.setItem(TOKEN_STORAGE_KEY, newSession.token())
@@ -44,20 +52,31 @@ export const useSessionStore = defineStore('accountSession', () => {
     if (token) {
       const identityId = localStorage.getItem(IDENTITY_ID_STORAGE_KEY)
       const seed = identityId ? loadSigningKeySeed(identityId) : null
+      resumeFailed.value = await resume(token, seed)
+    } else {
+      resumeFailed.value = false
+    }
+    ready.value = true
+  }
+
+  /** Resumes `token`, retrying non-rejection failures with backoff. Returns true when every
+   * attempt failed; a rejected token clears storage and returns false. */
+  async function resume(token: string, seed: Uint8Array | null): Promise<boolean> {
+    for (let attempt = 1; attempt <= RESUME_ATTEMPTS; attempt++) {
       try {
         session.value = seed
           ? await avalonClient().resumeAccountSessionWithSigningKey(token, seed)
           : await avalonClient().resumeAccountSession(token)
+        return false
       } catch (e) {
         if (e instanceof UnauthorizedError) {
           clearStorage()
+          return false
         }
-        // Any other failure (network, server unavailable): leave storage
-        // untouched, session stays null for this load — see this file's
-        // own header comment.
+        if (attempt < RESUME_ATTEMPTS) await sleep(RESUME_BASE_DELAY_MS * 2 ** (attempt - 1))
       }
     }
-    ready.value = true
+    return true
   }
 
   /** Adopts `newSession` as the active session, persisting its token/
@@ -85,5 +104,5 @@ export const useSessionStore = defineStore('accountSession', () => {
   const identityId = () => session.value?.identity().id ?? null
   const signingKeyId = () => session.value?.signingKeyId() ?? null
 
-  return { session, ready, initialize, setSession, logout, isAuthenticated, token, identityId, signingKeyId }
+  return { session, ready, resumeFailed, initialize, setSession, logout, isAuthenticated, token, identityId, signingKeyId }
 })
