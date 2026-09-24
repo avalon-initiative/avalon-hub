@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useSessionStore } from '../api/session'
+import { invalidateGuildReadsOnLeave } from '../api/sharedReads'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +15,11 @@ const router = createRouter({
       path: '/create-identity',
       name: 'create-identity',
       component: () => import('../views/CreateIdentity.vue'),
+    },
+    {
+      path: '/session-unavailable',
+      name: 'session-unavailable',
+      component: () => import('../views/SessionUnavailable.vue'),
     },
     {
       path: '/login',
@@ -106,10 +112,15 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (to.meta.requiresAuth && !useSessionStore().isAuthenticated()) {
+  const session = useSessionStore()
+  if (to.meta.requiresAuth && !session.isAuthenticated()) {
+    // A stored token whose resume failed transiently is not a logout.
+    if (session.resumeFailed) return { name: 'session-unavailable', query: { redirect: to.fullPath } }
     return { name: 'login' }
   }
   return true
 })
+
+router.afterEach((_to, from) => invalidateGuildReadsOnLeave(from.name))
 
 export default router

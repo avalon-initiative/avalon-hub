@@ -100,6 +100,14 @@ server client is `@avalon-initiative/protocol-sdk`: nothing in the app calls
 `AccountSession`) and thin domain modules (`guilds.ts`, `friends.ts`, ...)
 built on it; `apps/hub-app` uses the same SDK with its own session store.
 
+Session resume distinguishes rejection from unavailability. A 401 on the
+stored token clears storage and lands on `/login`. Any other failure (a 429, a
+5xx, a network error) is retried up to three times with doubling backoff; if all
+attempts fail the token is kept, `resumeFailed` is set, and the route guard sends
+the user to `/session-unavailable`, which offers a retry and returns to the
+requested page. The SDK does not expose `Retry-After`, so the backoff is fixed
+rather than server-directed.
+
 The logged-in Hub is a persistent shell, not separate pages: `HubShell.vue`
 renders a fixed left sidebar on desktop (wordmark, nav, the caller's own
 presence) that collapses to a bottom nav bar on mobile, plus a top header
@@ -241,3 +249,14 @@ reads, and connection/grant management. See
 [guilds](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/guilds.md), and
 [registry](https://github.com/LunarVagabond/avalon-protocol/blob/main/docs/projects/backend-server/architecture/registry.md) for the endpoint-level
 detail behind each domain.
+
+### Request volume
+
+The shell loads its own data once on mount and refreshes it on a 30 second poll,
+not per route change. Reads that the shell and pages both need (a member's guild
+memberships, guild metadata and pending guild invites) go through
+`apps/hub/src/api/sharedReads.ts`, a 30 second cache that also shares in-flight
+requests. Poll ticks and each page's own `refresh()` bypass the cache, so anything
+a user just changed is re-read from the server, and leaving a guild page drops the
+guild entries. On a Home, Friends, Guilds, Home sequence with two guilds this
+takes the guild reads from 4 requests on the Guilds page and 3 on Home to none.

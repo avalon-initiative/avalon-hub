@@ -6,6 +6,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import type { Guild } from '@avalon-initiative/protocol-sdk'
 import { useSessionStore } from '../api/session'
+import { cachedRead } from '../api/sharedReads'
 
 // Guild metadata (rename, member count) isn't push-updated anywhere in
 // this build, same as friends' membership poll — 5 minutes is plenty.
@@ -20,20 +21,25 @@ export function useMyGuilds() {
 
   let pollHandle: ReturnType<typeof setInterval> | undefined
 
-  async function refresh() {
+  // Mount reads may come from the shared cache; polls and explicit refreshes always hit the server.
+  async function load(force: boolean) {
     const s = session.session
     if (!s) return
     try {
-      const memberships = await s.myGuilds()
+      const memberships = await cachedRead('guilds:memberships', () => s.myGuilds(), { force })
       if (!Array.isArray(memberships)) return
-      guilds.value = await Promise.all(memberships.map((m) => s.getGuild(m.guildId)))
+      guilds.value = await Promise.all(
+        memberships.map((m) => cachedRead(`guilds:${m.guildId}`, () => s.getGuild(m.guildId), { force })),
+      )
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Something went wrong.'
     }
   }
 
+  const refresh = () => load(true)
+
   onMounted(async () => {
-    await refresh()
+    await load(false)
     loading.value = false
     pollHandle = setInterval(refresh, POLL_INTERVAL_MS)
   })

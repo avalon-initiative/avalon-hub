@@ -13,6 +13,7 @@ import {
   loadGuardianOfSeen,
 } from '../api/notifications'
 import { useSessionStore } from '../api/session'
+import { cachedRead } from '../api/sharedReads'
 
 // Deliberately not as tight as Profile.vue's own in-page 5s poll (issue
 // #201/#307's approval flows) — this is an ambient, always-mounted
@@ -49,7 +50,8 @@ export function useNotificationSummary() {
 
   let pollHandle: ReturnType<typeof setInterval> | undefined
 
-  async function refresh() {
+  // Poll ticks bypass the shared cache so it is re-warmed at the poll cadence.
+  async function refresh(polled = false) {
     const s = session.session
     if (!s) return
     try {
@@ -60,8 +62,8 @@ export function useNotificationSummary() {
       const [friendRequests, memberships, invites, grants, guardianRequests, guardianOfList, conversations] =
         await Promise.all([
           s.friendRequests().catch(() => []),
-          s.myGuilds().catch(() => []),
-          s.myGuildInvites().catch(() => []),
+          cachedRead('guilds:memberships', () => s.myGuilds(), { force: polled }).catch(() => []),
+          cachedRead('guilds:invites', () => s.myGuildInvites(), { force: polled }).catch(() => []),
           s.listDeviceGrants('pending').catch(() => []),
           s.guardianRequests().catch(() => []),
           s.guardianOf().catch(() => []),
@@ -114,7 +116,7 @@ export function useNotificationSummary() {
 
   onMounted(async () => {
     await refresh()
-    pollHandle = setInterval(refresh, POLL_INTERVAL_MS)
+    pollHandle = setInterval(() => refresh(true), POLL_INTERVAL_MS)
   })
 
   onUnmounted(() => {
@@ -132,6 +134,6 @@ export function useNotificationSummary() {
     unreadDmCount,
     loading,
     error,
-    refresh,
+    refresh: () => refresh(true),
   }
 }
