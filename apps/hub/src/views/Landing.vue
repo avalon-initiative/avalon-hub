@@ -189,7 +189,7 @@ const GITHUB_PROFILE_URL = 'https://github.com/avalon-initiative'
         <span :class="styles.brandMark"><AvalonIcon name="logo" :size="18" /></span>
         <span :class="styles.brandName">AVALON</span>
       </div>
-      <p :class="styles.footerTagline">Infinite worlds. One you.</p>
+      <p :class="styles.footerTagline">Bringing the internet back together.</p>
       <a
         :class="styles.footerLink"
         :href="GITHUB_PROFILE_URL"

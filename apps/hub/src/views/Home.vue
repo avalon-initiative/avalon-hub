@@ -71,7 +71,7 @@ const quickActions = [
       <h1 :class="styles.title">
         Welcome back<template v-if="displayName">, {{ displayName }}</template>
       </h1>
-      <p :class="styles.tagline">Your integrators. Your community. Your identity. Across every world.</p>
+      <p :class="styles.tagline">Your integrators. Your community. Your identity. Connected across every world.</p>
     </header>
     <p v-if="error" :class="styles.error">{{ error }}</p>
 
