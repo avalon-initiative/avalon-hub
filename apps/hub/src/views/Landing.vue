@@ -91,8 +91,10 @@ const GITHUB_PROFILE_URL = 'https://github.com/avalon-initiative'
         <span :class="styles.eyebrow">An open network for users, integrators, and communities</span>
         <h1 :class="styles.headline">One identity.<br />Every world you play in.</h1>
         <p :class="styles.subhead">
-          Your identity, friends, guilds, and achievements don’t belong to any single integrator —
-          they move with you, so a world can end without taking your community down with it.
+          The internet was built to bring people together, then split into walled gardens, each with
+          its own login, friends list, and history. Avalon is a step toward putting the connection
+          back: your identity, friends, guilds, and achievements belong to you, not to any single
+          integrator, and they move with you.
         </p>
         <div :class="styles.heroActions">
           <RouterLink to="/create-identity"><AvalonButton label="Create your identity" /></RouterLink>
