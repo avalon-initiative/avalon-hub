@@ -9,8 +9,10 @@ The Avalon Hub client applications, as one npm workspace:
 
 Both talk to an `avalon-server` only through the published TypeScript SDK
 (`@avalon-initiative/protocol-sdk`) and share the component library
-`@avalon-initiative/common-ui`. The server, protocol and documentation of the
-network live in [`avalon-protocol`](https://github.com/avalon-initiative/avalon-protocol); these
+`@avalon-initiative/common-ui`. The server and protocol live in
+[`avalon-protocol`](https://github.com/avalon-initiative/avalon-protocol), and the ecosystem
+documentation (what Avalon is and how the projects fit together) in
+[`avalon-docs`](https://github.com/avalon-initiative/avalon-docs); these
 apps were moved here from its `apps/` directory, and the earlier history stays there.
 
 Docs: [`docs/hub/`](docs/hub/README.md) and [`docs/hub-app/`](docs/hub-app/README.md).
