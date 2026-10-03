@@ -1,9 +1,10 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { AccountSession } from '@avalon-initiative/protocol-sdk'
 import { beginDeviceGrantRequest } from '../../src/api/deviceGrants'
+import { testIdentityId } from '../testing/identityIds'
 
 function testSession(): AccountSession {
-  const identityId = crypto.randomUUID()
+  const identityId = testIdentityId('device')
   return new AccountSession({
     identity: { id: identityId, createdAt: 'now' },
     profile: {

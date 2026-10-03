@@ -7,9 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Home from '../../src/views/Home.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const profile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -142,7 +143,7 @@ describe('Home', () => {
         name: 'Celestial Forge',
         tag: 'FORGE',
         description: '',
-        owner: 'id-1',
+        owner: testIdentityId('id-1'),
         created_at: '2026-09-01T00:00:00Z',
         member_count: 42,
         integrators: [],
@@ -159,7 +160,7 @@ describe('Home', () => {
         { id: 'chan-1', guild_id: 'guild-1', name: 'general', archived: false, created_at: '2026-09-01T00:00:00Z', announcement_only: false },
       ],
       '/guilds/guild-1/channels/chan-1/messages': [
-        { id: 'msg-1', channel_id: 'chan-1', author: 'id-2', body: "Let's run the dungeon tonight!", sent_at: new Date().toISOString() },
+        { id: 'msg-1', channel_id: 'chan-1', author: testIdentityId('id-2'), body: "Let's run the dungeon tonight!", sent_at: new Date().toISOString() },
       ],
     })
     await loginSession()

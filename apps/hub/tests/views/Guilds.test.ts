@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Guilds from '../../src/views/Guilds.vue'
 import { useSessionStore } from '../../src/api/session'
 import { mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 function testRouter() {
   return createRouter({
@@ -19,14 +20,14 @@ function testRouter() {
   })
 }
 
-const profile = { identity_id: 'id-1', identity_created_at: 'now', display_name: 'Nova', avatar_url: null }
+const profile = { identity_id: testIdentityId('id-1'), identity_created_at: 'now', display_name: 'Nova', avatar_url: null }
 
 const guildBase = {
   id: 'g1',
   name: 'Dragon Hunters',
   tag: 'DRGN',
   description: 'A guild.',
-  owner: 'id-owner',
+  owner: testIdentityId('id-owner'),
   created_at: 'now',
   member_count: 1,
   integrators: [],
@@ -83,12 +84,12 @@ describe('Guilds', () => {
       '/me': profile,
       '/me/guilds': [],
       '/me/guild-invites': [
-        { id: 'inv1', guild_id: 'g1', guild_name: 'Dragon Hunters', from: 'id-owner', created_at: 'now' },
+        { id: 'inv1', guild_id: 'g1', guild_name: 'Dragon Hunters', from: testIdentityId('id-owner'), created_at: 'now' },
       ],
       '/identities/profiles': [
-        { identity_id: 'id-owner', display_name: 'Nova', avatar_url: null },
+        { identity_id: testIdentityId('id-owner'), display_name: 'Nova', avatar_url: null },
       ],
-      '/guilds/g1/invites/inv1/accept': { guild_id: 'g1', identity_id: 'id-1', role_index: 1, joined_at: 'now' },
+      '/guilds/g1/invites/inv1/accept': { guild_id: 'g1', identity_id: testIdentityId('id-1'), role_index: 1, joined_at: 'now' },
     })
     await loginTestSession()
 

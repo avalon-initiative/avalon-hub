@@ -1,13 +1,19 @@
-// Issue #510: display_name is now the globally-unique handle, so it can
-// no longer be told apart from a raw identity id by checking for a `#`
-// (the old `name#1234` scheme's tell). The reliable check is the other
-// way around — a raw identity id is always a UUID; anything else is a
-// handle to resolve first via `api.resolveHandle`. Shared by every
-// "identity id or handle" input across the Hub (Friends.vue's
-// onAddFriend, Profile.vue's onBlockById, Guild.vue's onInvite) so the
-// regex and the decision it drives never drift between call sites.
-export const IDENTITY_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+import { isIdentityId, type AccountSession } from '@avalon-initiative/protocol-sdk'
 
-export function isIdentityId(input: string): boolean {
-  return IDENTITY_ID_RE.test(input)
+const HEX_64_ANY_CASE = /^[0-9a-f]{64}$/i
+
+/** Resolves an "identity id or handle" input: a canonical id is used as-is, anything else is a handle
+ * to resolve. A 64-hex string that is not canonical (uppercase) is rejected, never sent as a handle. */
+export async function resolveIdentityTarget(
+  session: Pick<AccountSession, 'resolveHandle'>,
+  input: string,
+): Promise<string> {
+  if (isIdentityId(input)) return input
+  if (HEX_64_ANY_CASE.test(input)) throw new Error('Identity ids are lowercase hex.')
+  return session.resolveHandle(input)
+}
+
+/** First 8 and last 4 characters of an id with an ellipsis; short strings are returned unchanged. */
+export function shortId(id: string): string {
+  return id.length <= 16 ? id : `${id.slice(0, 8)}…${id.slice(-4)}`
 }

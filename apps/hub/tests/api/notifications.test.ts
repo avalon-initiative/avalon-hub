@@ -8,6 +8,7 @@ import {
   markGuardianOfSeen,
 } from '../../src/api/notifications'
 import type { ConversationMessage } from '@avalon-initiative/protocol-sdk'
+import { testIdentityId } from '../testing/identityIds'
 
 beforeEach(() => {
   localStorage.clear()
@@ -17,7 +18,7 @@ function makeMessage(overrides: Partial<ConversationMessage> = {}): Conversation
   return {
     id: 'm1',
     conversationId: 'c1',
-    author: 'id-friend',
+    author: testIdentityId('id-friend'),
     body: 'hey',
     sentAt: '2026-01-02T00:00:00Z',
     ...overrides,
@@ -26,25 +27,25 @@ function makeMessage(overrides: Partial<ConversationMessage> = {}): Conversation
 
 describe('isConversationUnread', () => {
   it('is false when there is no last message at all', () => {
-    expect(isConversationUnread('c1', null, 'id-self', {})).toBe(false)
+    expect(isConversationUnread('c1', null, testIdentityId('id-self'), {})).toBe(false)
   })
 
   it('is false when the caller sent the last message themselves', () => {
-    expect(isConversationUnread('c1', makeMessage({ author: 'id-self' }), 'id-self', {})).toBe(false)
+    expect(isConversationUnread('c1', makeMessage({ author: testIdentityId('id-self') }), testIdentityId('id-self'), {})).toBe(false)
   })
 
   it('is true when never seen and the last message is from someone else', () => {
-    expect(isConversationUnread('c1', makeMessage(), 'id-self', {})).toBe(true)
+    expect(isConversationUnread('c1', makeMessage(), testIdentityId('id-self'), {})).toBe(true)
   })
 
   it('is false once seen at or after the last message', () => {
     const lastSeen = { c1: '2026-01-02T00:00:00Z' }
-    expect(isConversationUnread('c1', makeMessage(), 'id-self', lastSeen)).toBe(false)
+    expect(isConversationUnread('c1', makeMessage(), testIdentityId('id-self'), lastSeen)).toBe(false)
   })
 
   it('is true again once a newer message arrives after the last seen mark', () => {
     const lastSeen = { c1: '2026-01-01T00:00:00Z' }
-    expect(isConversationUnread('c1', makeMessage({ sentAt: '2026-01-02T00:00:00Z' }), 'id-self', lastSeen)).toBe(
+    expect(isConversationUnread('c1', makeMessage({ sentAt: '2026-01-02T00:00:00Z' }), testIdentityId('id-self'), lastSeen)).toBe(
       true,
     )
   })

@@ -12,9 +12,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Guild from '../../src/views/Guild.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
+import { shortId } from '../../src/utils/identity'
 
 const profile = {
-  identity_id: 'id-owner',
+  identity_id: testIdentityId('id-owner'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -25,7 +27,7 @@ const guild = {
   name: 'Dragon Hunters',
   tag: 'DRGN',
   description: 'A guild.',
-  owner: 'id-owner',
+  owner: testIdentityId('id-owner'),
   created_at: 'now',
   member_count: 1,
   integrators: [],
@@ -51,7 +53,7 @@ const roles = [
   },
 ]
 
-const members = [{ guild_id: 'g1', identity_id: 'id-owner', role_index: 0, joined_at: 'now' }]
+const members = [{ guild_id: 'g1', identity_id: testIdentityId('id-owner'), role_index: 0, joined_at: 'now' }]
 
 const channels = [
   { id: 'c1', name: 'general', archived: false },
@@ -63,7 +65,7 @@ function messagesFor(channelId: string) {
     {
       id: `m-${channelId}-1`,
       channel_id: channelId,
-      author: 'id-owner',
+      author: testIdentityId('id-owner'),
       body: `Hello from ${channelId}`,
       sent_at: 'now',
     },
@@ -185,7 +187,7 @@ describe('Guild', () => {
     const liveFirstPage = Array.from({ length: 50 }, (_, i) => ({
       id: `live-${i}`,
       channel_id: 'c1',
-      author: 'id-owner',
+      author: testIdentityId('id-owner'),
       body: `live message ${i}`,
       sent_at: new Date(2026, 0, 2, 12, 0, 50 - i).toISOString(),
     }))
@@ -193,7 +195,7 @@ describe('Guild', () => {
       {
         id: 'live-old-1',
         channel_id: 'c1',
-        author: 'id-owner',
+        author: testIdentityId('id-owner'),
         body: 'oldest live message',
         sent_at: new Date(2026, 0, 1, 11, 0).toISOString(),
       },
@@ -202,7 +204,7 @@ describe('Guild', () => {
       {
         id: 'archived-1',
         channel_id: 'c1',
-        author: 'id-owner',
+        author: testIdentityId('id-owner'),
         body: 'ancient archived message',
         sent_at: new Date(2025, 0, 1).toISOString(),
         archived_at: new Date(2025, 6, 1).toISOString(),
@@ -279,7 +281,7 @@ describe('Guild', () => {
                   {
                     id: 'live-1',
                     channel_id: 'c1',
-                    author: 'id-owner',
+                    author: testIdentityId('id-owner'),
                     body: 'the only message',
                     sent_at: '2026-01-01T00:00:00Z',
                   },
@@ -384,7 +386,7 @@ describe('Guild', () => {
       description: null,
       starts_at: '2026-09-15T20:00:00Z',
       ends_at: null,
-      created_by: 'id-owner',
+      created_by: testIdentityId('id-owner'),
       created_at: '2026-09-01T00:00:00Z',
       rsvp_counts: { going: 1, maybe: 0, not_going: 0 },
       public: false,
@@ -395,9 +397,9 @@ describe('Guild', () => {
       ...baseRoutes(),
       '/guilds/g1/events': [event],
       '/guilds/g1/events/ev1/rsvps': [
-        { identity_id: 'id-owner', status: 'going', responded_at: '2026-09-02T00:00:00Z' },
+        { identity_id: testIdentityId('id-owner'), status: 'going', responded_at: '2026-09-02T00:00:00Z' },
       ],
-      '/identities/profiles': [{ identity_id: 'id-owner', display_name: 'Nova' }],
+      '/identities/profiles': [{ identity_id: testIdentityId('id-owner'), display_name: 'Nova' }],
     })
     localStorage.setItem('avalon:session:token', 'a-token')
     await useSessionStore().initialize()
@@ -534,7 +536,7 @@ describe('Guild', () => {
   })
 
   // Issue #392, updated by #510: the invite field accepts either a raw
-  // identity id (a UUID, sent straight through, no resolve call) or a
+  // identity id (sent straight through, no resolve call) or a
   // display_name handle (resolved to an identity id first, same as
   // Friends.vue's add-friend flow) — display_name is the handle now, so
   // there's no client-side "does this look like an id or a handle"
@@ -543,8 +545,8 @@ describe('Guild', () => {
   it('invites by identity id directly, or resolves a handle first', async () => {
     mockFetchByPath({
       ...baseRoutes(),
-      '/guilds/g1/invites': { id: 'inv1', guild_id: 'g1', to: 'id-outsider', status: 'pending' },
-      '/friends/handle/Nova': { identity_id: '11111111-2222-3333-4444-555555555555' },
+      '/guilds/g1/invites': { id: 'inv1', guild_id: 'g1', to: testIdentityId('id-outsider'), status: 'pending' },
+      '/friends/handle/Nova': { identity_id: testIdentityId('nova') },
     })
     localStorage.setItem('avalon:session:token', 'a-token')
     await useSessionStore().initialize()
@@ -566,9 +568,9 @@ describe('Guild', () => {
     const inviteField = wrapper.find('input[placeholder="Identity id, or display name"]')
     const inviteForm = wrapper.findAll('form').find((f) => f.text().includes('Send invite'))!
 
-    // A raw identity id (UUID) is sent straight through — no handle-resolve call.
+    // A raw identity id is sent straight through — no handle-resolve call.
     ;(fetch as ReturnType<typeof vi.fn>).mockClear()
-    await inviteField.setValue('11111111-2222-3333-4444-555555555555')
+    await inviteField.setValue(testIdentityId('nova'))
     await inviteForm.trigger('submit')
     await flushPromises()
     expect(wrapper.text()).toContain('Invite sent — they\'ll see it on their Guilds page.')
@@ -591,7 +593,7 @@ describe('Guild', () => {
         const path = new URL(url, 'http://test').pathname
         const routes: Record<string, unknown> = {
           ...baseRoutes(),
-          '/me': { ...profile, identity_id: 'id-outsider' },
+          '/me': { ...profile, identity_id: testIdentityId('id-outsider') },
           '/guilds/g1': { ...guild, join_policy: 'open', recruiting: true },
         }
         if (path === '/guilds/g1/channels' || path === '/guilds/g1/events') {
@@ -639,7 +641,7 @@ describe('Guild', () => {
   it('shows only public events, read-only, to a non-member of a public guild', async () => {
     mockFetchByPath({
       ...baseRoutes(),
-      '/me': { ...profile, identity_id: 'id-outsider' },
+      '/me': { ...profile, identity_id: testIdentityId('id-outsider') },
       '/guilds/g1': { ...guild, public: true },
       '/guilds/g1/members': [],
       '/guilds/g1/events': [
@@ -651,7 +653,7 @@ describe('Guild', () => {
           description: null,
           starts_at: '2026-09-20T20:00:00Z',
           ends_at: null,
-          created_by: 'id-owner',
+          created_by: testIdentityId('id-owner'),
           created_at: 'now',
           rsvp_counts: { going: 0, maybe: 0, not_going: 0 },
           public: true,
@@ -695,7 +697,7 @@ describe('Guild', () => {
       description: null,
       starts_at: '2026-09-20T20:00:00Z',
       ends_at: null,
-      created_by: 'id-owner',
+      created_by: testIdentityId('id-owner'),
       created_at: 'now',
       rsvp_counts: { going: 1, maybe: 0, not_going: 0 },
       public: false,
@@ -751,7 +753,7 @@ describe('Guild', () => {
       description: null,
       starts_at: '2026-09-20T20:00:00Z',
       ends_at: null,
-      created_by: 'id-owner',
+      created_by: testIdentityId('id-owner'),
       created_at: 'now',
       rsvp_counts: { going: 0, maybe: 0, not_going: 0 },
       public: false,
@@ -810,10 +812,10 @@ describe('Guild', () => {
     await membersTab.trigger('click')
     await flushPromises()
 
-    const memberButton = wrapper.findAll('button').find((b) => b.text().includes('id-owner'))!
+    const memberButton = wrapper.findAll('button').find((b) => b.text().includes(shortId(testIdentityId('id-owner'))))!
     await memberButton.trigger('click')
 
-    expect(pushSpy).toHaveBeenCalledWith({ name: 'user-profile', params: { id: 'id-owner' } })
+    expect(pushSpy).toHaveBeenCalledWith({ name: 'user-profile', params: { id: testIdentityId('id-owner') } })
   })
 
   // Issue #449: recruiting and public are independent settings, each with

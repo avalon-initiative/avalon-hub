@@ -11,9 +11,10 @@ import Profile from '../../src/views/Profile.vue'
 import Friends from '../../src/views/Friends.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const profile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Avalon User',
   avatar_url: null,
@@ -41,7 +42,7 @@ beforeEach(() => {
   vi.stubGlobal('WebSocket', FakeWebSocket)
   mockFetchByPath({
     '/me': profile,
-    '/me/presence': { identity_id: 'id-1', status: 'Online', playing: null, updated_at: 'now' },
+    '/me/presence': { identity_id: testIdentityId('id-1'), status: 'Online', playing: null, updated_at: 'now' },
     '/me/devices': [],
     '/me/devices/grants': [],
     '/friends': [],
@@ -125,7 +126,7 @@ describe('HubShell', () => {
     await flushPromises()
 
     mockFetchByPath({
-      '/me/presence': { identity_id: 'id-1', status: 'DoNotDisturb', playing: null, updated_at: 'now' },
+      '/me/presence': { identity_id: testIdentityId('id-1'), status: 'DoNotDisturb', playing: null, updated_at: 'now' },
     })
 
     const select = wrapper.find('select[aria-label="Set your status"]')

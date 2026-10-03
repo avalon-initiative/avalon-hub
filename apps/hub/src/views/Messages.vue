@@ -12,6 +12,7 @@ import { AvalonCard, AvalonChatComposer, AvalonChatMessage } from '@avalon-initi
 import { otherParticipants, MESSAGE_BODY_MAX_CHARS } from '../api/conversations'
 import { useConversations } from '../composables/useConversations'
 import { useConversationThread } from '../composables/useConversationThread'
+import { shortId } from '../utils/identity'
 import styles from '../styles/page.module.scss'
 import local from '../styles/Messages.module.scss'
 
@@ -165,7 +166,7 @@ function onMessageScroll(event: Event) {
                 v-for="message in messages"
                 :key="message.id"
                 :author-id="message.author"
-                :author-display-name="participantNames[message.author]"
+                :author-display-name="participantNames[message.author] ?? shortId(message.author)"
                 :body="message.body"
                 :sent-at-label="new Date(message.sentAt).toLocaleString()"
                 :is-own="message.author === selfId"

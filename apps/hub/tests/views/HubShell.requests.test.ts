@@ -9,6 +9,7 @@ import Friends from '../../src/views/Friends.vue'
 import Guilds from '../../src/views/Guilds.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const guildBase = { name: 'G', tag: 'G', description: '', member_count: 1, created_at: 'now', icon: null }
 
@@ -17,8 +18,8 @@ beforeEach(() => {
   setActivePinia(createPinia())
   vi.stubGlobal('WebSocket', FakeWebSocket)
   mockFetchByPath({
-    '/me': { identity_id: 'id-1', identity_created_at: 'now', display_name: 'Avalon User', avatar_url: null },
-    '/me/presence': { identity_id: 'id-1', status: 'Online', playing: null, updated_at: 'now' },
+    '/me': { identity_id: testIdentityId('id-1'), identity_created_at: 'now', display_name: 'Avalon User', avatar_url: null },
+    '/me/presence': { identity_id: testIdentityId('id-1'), status: 'Online', playing: null, updated_at: 'now' },
     '/me/guilds': [
       { guild_id: 'g1', role_index: 0, joined_at: 'now' },
       { guild_id: 'g2', role_index: 0, joined_at: 'now' },
@@ -26,8 +27,8 @@ beforeEach(() => {
     '/guilds/g1': { ...guildBase, id: 'g1' },
     '/guilds/g2': { ...guildBase, id: 'g2' },
     '/conversations': [
-      { id: 'c1', participants: ['id-1', 'id-2'] },
-      { id: 'c2', participants: ['id-1', 'id-3'] },
+      { id: 'c1', participants: [testIdentityId('id-1'), testIdentityId('id-2')] },
+      { id: 'c2', participants: [testIdentityId('id-1'), testIdentityId('id-3')] },
     ],
   })
 })

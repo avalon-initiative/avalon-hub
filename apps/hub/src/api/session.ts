@@ -10,10 +10,10 @@
 // so the router shows a retry screen instead of the login page.
 import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
-import { AvalonClient, RateLimitedError, UnauthorizedError, type AccountSession } from '@avalon-initiative/protocol-sdk'
+import { AvalonClient, isIdentityId, RateLimitedError, UnauthorizedError, type AccountSession } from '@avalon-initiative/protocol-sdk'
 import { getServerUrl } from './serverUrl'
 import { invalidateSharedReads } from './sharedReads'
-import { loadSigningKeySeed, clearSigningKeySeed } from './signingKeyStorage'
+import { clearStaleSigningKeys, clearSigningKeySeed, loadSigningKeySeed } from './signingKeyStorage'
 
 const TOKEN_STORAGE_KEY = 'avalon:session:token'
 const IDENTITY_ID_STORAGE_KEY = 'avalon:session:identityId'
@@ -45,6 +45,8 @@ export const useSessionStore = defineStore('accountSession', () => {
   const ready = ref(false)
   // True when a stored token exists but resuming failed for a reason other than rejection.
   const resumeFailed = ref(false)
+  // True when initialize() dropped a stored session whose identity id is not in the current format.
+  const staleSessionCleared = ref(false)
 
   function persist(newSession: AccountSession) {
     localStorage.setItem(TOKEN_STORAGE_KEY, newSession.token())
@@ -61,6 +63,13 @@ export const useSessionStore = defineStore('accountSession', () => {
     const token = localStorage.getItem(TOKEN_STORAGE_KEY)
     if (token) {
       const identityId = localStorage.getItem(IDENTITY_ID_STORAGE_KEY)
+      if (identityId !== null && !isIdentityId(identityId)) {
+        clearStorage()
+        clearStaleSigningKeys()
+        staleSessionCleared.value = true
+        ready.value = true
+        return
+      }
       const seed = identityId ? loadSigningKeySeed(identityId) : null
       resumeFailed.value = await resume(token, seed)
     } else {
@@ -114,5 +123,5 @@ export const useSessionStore = defineStore('accountSession', () => {
   const identityId = () => session.value?.identity().id ?? null
   const signingKeyId = () => session.value?.signingKeyId() ?? null
 
-  return { session, ready, resumeFailed, initialize, setSession, logout, isAuthenticated, token, identityId, signingKeyId }
+  return { session, ready, resumeFailed, staleSessionCleared, initialize, setSession, logout, isAuthenticated, token, identityId, signingKeyId }
 })

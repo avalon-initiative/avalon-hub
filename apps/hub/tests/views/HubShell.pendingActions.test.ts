@@ -10,9 +10,10 @@ import HubShell from '../../src/views/HubShell.vue'
 import Profile from '../../src/views/Profile.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const profile = {
-  identity_id: 'id-self',
+  identity_id: testIdentityId('id-self'),
   identity_created_at: 'now',
   display_name: 'Avalon User',
   avatar_url: null,
@@ -34,7 +35,7 @@ function testRouter() {
 function baseRoutes() {
   return {
     '/me': profile,
-    '/me/presence': { identity_id: 'id-self', status: 'Online', playing: null, updated_at: 'now' },
+    '/me/presence': { identity_id: testIdentityId('id-self'), status: 'Online', playing: null, updated_at: 'now' },
     '/me/devices': [],
     '/me/devices/grants': [],
     '/friends': [],
@@ -86,26 +87,26 @@ describe('HubShell pending-actions badge', () => {
     mockFetchByPath({
       ...baseRoutes(),
       '/friends/requests': [
-        { id: 'r1', from: 'id-other', to: 'id-self', requested_at: 'now' },
+        { id: 'r1', from: testIdentityId('id-other'), to: testIdentityId('id-self'), requested_at: 'now' },
         // An outgoing request the caller sent themselves never counts.
-        { id: 'r2', from: 'id-self', to: 'id-other-2', requested_at: 'now' },
+        { id: 'r2', from: testIdentityId('id-self'), to: 'id-other-2', requested_at: 'now' },
       ],
       '/me/guilds': [{ guild_id: 'g1', role_index: 0, joined_at: 'now' }],
       '/guilds/g1': { id: 'g1', name: 'Dragon Hunters' },
       '/guilds/g1/join-requests': [
-        { id: 'jr1', guild_id: 'g1', identity_id: 'id-applicant', requested_at: 'now' },
+        { id: 'jr1', guild_id: 'g1', identity_id: testIdentityId('id-applicant'), requested_at: 'now' },
       ],
-      '/me/guild-invites': [{ id: 'inv1', guild_id: 'g1', from: 'id-owner', to: 'id-self', status: 'pending' }],
+      '/me/guild-invites': [{ id: 'inv1', guild_id: 'g1', from: testIdentityId('id-owner'), to: testIdentityId('id-self'), status: 'pending' }],
       '/me/devices/grants': [{ id: 'grant1', status: 'pending', created_at: 'now' }],
       '/me/recovery/guardian-requests': [
-        { request: { id: 'gr1', identity_id: 'id-recovering', status: 'pending' } },
+        { request: { id: 'gr1', identity_id: testIdentityId('id-recovering'), status: 'pending' } },
       ],
       '/me/recovery/guardian-of': [
-        { identity_id: 'id-ward', display_name: 'Ward', added_at: 'now' },
+        { identity_id: testIdentityId('id-ward'), display_name: 'Ward', added_at: 'now' },
       ],
-      '/conversations': [{ id: 'convo1', participants: ['id-self', 'id-other'] }],
+      '/conversations': [{ id: 'convo1', participants: [testIdentityId('id-self'), testIdentityId('id-other')] }],
       '/conversations/convo1/messages': [
-        { id: 'm1', conversation_id: 'convo1', author: 'id-other', body: 'hi', sent_at: 'now' },
+        { id: 'm1', conversation_id: 'convo1', author: testIdentityId('id-other'), body: 'hi', sent_at: 'now' },
       ],
     })
     localStorage.setItem('avalon:session:token', 'a-token')
@@ -142,9 +143,9 @@ describe('HubShell pending-actions badge', () => {
     vi.useFakeTimers()
     mockFetchByPath({
       ...baseRoutes(),
-      '/conversations': [{ id: 'convo1', participants: ['id-self', 'id-other'] }],
+      '/conversations': [{ id: 'convo1', participants: [testIdentityId('id-self'), testIdentityId('id-other')] }],
       '/conversations/convo1/messages': [
-        { id: 'm1', conversation_id: 'convo1', author: 'id-other', body: 'hi', sent_at: 'now' },
+        { id: 'm1', conversation_id: 'convo1', author: testIdentityId('id-other'), body: 'hi', sent_at: 'now' },
       ],
     })
     localStorage.setItem('avalon:session:token', 'a-token')

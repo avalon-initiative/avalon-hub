@@ -10,9 +10,10 @@ import { AvalonEditableField } from '@avalon-initiative/common-ui'
 import Profile from '../../src/views/Profile.vue'
 import { useSessionStore } from '../../src/api/session'
 import { mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const baseProfile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,

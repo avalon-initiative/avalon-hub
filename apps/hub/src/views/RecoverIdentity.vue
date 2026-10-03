@@ -9,7 +9,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { AvalonAuthCard, AvalonButton, AvalonForm, AvalonTextField } from '@avalon-initiative/common-ui'
-import type { RecoveryRequest } from '@avalon-initiative/protocol-sdk'
+import { isIdentityId, parseIdentityId, type RecoveryRequest } from '@avalon-initiative/protocol-sdk'
 import { avalonClient, useSessionStore } from '../api/session'
 import { loadSigningKeySeed } from '../api/signingKeyStorage'
 import { finalizeRecoveryRequest, getIdentityRecoveryStatus, startRecovery } from '../api/recovery'
@@ -35,9 +35,14 @@ const canFinalize = computed(() => {
 
 async function onSubmit() {
   error.value = ''
+  const id = identityId.value.trim()
+  if (!isIdentityId(id)) {
+    error.value = 'Enter a valid identity id: 64 lowercase hex characters.'
+    return
+  }
   submitting.value = true
   try {
-    request.value = await startRecovery(identityId.value.trim())
+    request.value = await startRecovery(id)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Something went wrong.'
   } finally {
@@ -75,7 +80,7 @@ async function onFinalize() {
   error.value = ''
   finalizing.value = true
   try {
-    const identityId = request.value.identityId
+    const identityId = parseIdentityId(request.value.identityId)
     request.value = await finalizeRecoveryRequest(request.value.id)
     const accountSession = await avalonClient().loginWithIdentityId(identityId)
     // Guardian-based recovery only ever registers a new

@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Friends from '../../src/views/Friends.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 function testRouter() {
   return createRouter({
@@ -16,7 +17,7 @@ function testRouter() {
 }
 
 const profile = {
-  identity_id: 'id-self',
+  identity_id: testIdentityId('id-self'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -53,9 +54,9 @@ describe('Friends "people you may know" polling', () => {
       '/friends': [],
       '/friends/requests': [],
       '/presence': [],
-      '/people/discover': { candidates: [{ identity_id: 'id-suggested' }] },
+      '/people/discover': { candidates: [{ identity_id: testIdentityId('id-suggested') }] },
       '/identities/profiles': [
-        { identity_id: 'id-suggested', display_name: 'Ilya', avatar_url: null },
+        { identity_id: testIdentityId('id-suggested'), display_name: 'Ilya', avatar_url: null },
       ],
     })
     await vi.advanceTimersByTimeAsync(15_000)

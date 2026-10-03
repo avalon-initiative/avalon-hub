@@ -12,7 +12,8 @@ const { FakeUnauthorized, FakeRateLimited, resume, resumeWithKey } = vi.hoisted(
   resumeWithKey: vi.fn(),
 }))
 
-vi.mock('@avalon-initiative/protocol-sdk', () => ({
+vi.mock('@avalon-initiative/protocol-sdk', async (importActual) => ({
+  ...(await importActual<typeof import('@avalon-initiative/protocol-sdk')>()),
   UnauthorizedError: FakeUnauthorized,
   RateLimitedError: FakeRateLimited,
   AvalonClient: class {
@@ -41,7 +42,8 @@ function memoryStore(initial: Record<string, string> = {}): KeyValueStore & { da
   }
 }
 
-const fakeSession = { token: () => 'tok-1', identity: () => ({ id: 'id-1' }) }
+const VALID_ID = 'a1'.repeat(32)
+const fakeSession = { token: () => 'tok-1', identity: () => ({ id: VALID_ID }) }
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -61,7 +63,7 @@ describe('session store', () => {
   })
 
   it('resumes a stored token through the configured store', async () => {
-    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': 'id-1' }))
+    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': VALID_ID }))
     resume.mockResolvedValue(fakeSession)
     const store = useSessionStore()
     await store.initialize()
@@ -70,8 +72,8 @@ describe('session store', () => {
   })
 
   it('resumes with the signing key when this device holds one', async () => {
-    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': 'id-1' }))
-    storeSigningKeySeed('id-1', new Uint8Array([1, 2, 3]))
+    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': VALID_ID }))
+    storeSigningKeySeed(VALID_ID, new Uint8Array([1, 2, 3]))
     resumeWithKey.mockResolvedValue(fakeSession)
     const store = useSessionStore()
     await store.initialize()
@@ -138,21 +140,21 @@ describe('session store', () => {
   it('persists credentials on setSession and clears them (and the key) on logout', async () => {
     const store = memoryStore()
     configureSessionStorage(store)
-    storeSigningKeySeed('id-1', new Uint8Array([9]))
+    storeSigningKeySeed(VALID_ID, new Uint8Array([9]))
     const s = useSessionStore()
     await s.setSession(fakeSession as never)
-    expect(store.data).toMatchObject({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': 'id-1' })
+    expect(store.data).toMatchObject({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': VALID_ID })
 
     await s.logout()
     expect(store.data).toEqual({})
-    expect(localStorage.getItem('avalon:signingKey:id-1')).toBeNull()
+    expect(localStorage.getItem(`avalon:signingKey:${VALID_ID}`)).toBeNull()
     expect(s.isAuthenticated()).toBe(false)
   })
 })
 
 describe('session store resume backoff', () => {
   const startResume = () => {
-    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': 'id-1' }))
+    configureSessionStorage(memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': VALID_ID }))
     const s = useSessionStore()
     return { s, done: s.initialize() }
   }
@@ -191,5 +193,24 @@ describe('session store resume backoff', () => {
     await done
     expect(resume).toHaveBeenCalledTimes(2)
     vi.useRealTimers()
+  })
+})
+
+describe('session store stale identity ids', () => {
+  const OLD_UUID = '33333333-4444-5555-6666-777777777777'
+
+  it('clears stored credentials and keys filed under a UUID id without calling the server', async () => {
+    const store = memoryStore({ 'avalon:session:token': 'tok-1', 'avalon:session:identityId': OLD_UUID })
+    configureSessionStorage(store)
+    localStorage.setItem(`avalon:signingKey:${OLD_UUID}`, 'c2VlZA==')
+    const s = useSessionStore()
+    await s.initialize()
+    expect(resume).not.toHaveBeenCalled()
+    expect(resumeWithKey).not.toHaveBeenCalled()
+    expect(store.data).toEqual({})
+    expect(localStorage.getItem(`avalon:signingKey:${OLD_UUID}`)).toBeNull()
+    expect(s.isAuthenticated()).toBe(false)
+    expect(s.staleSessionCleared).toBe(true)
+    expect(s.ready).toBe(true)
   })
 })

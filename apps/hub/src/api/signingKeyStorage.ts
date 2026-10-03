@@ -2,6 +2,8 @@
 // unencrypted, keyed by identity id. Key generation and mnemonic derivation live
 // in `@avalon-initiative/protocol-sdk`; this file only stores, loads and clears
 // the bytes.
+import { isIdentityId } from '@avalon-initiative/protocol-sdk'
+
 const STORAGE_PREFIX = 'avalon:signingKey:'
 
 function storageKey(identityId: string): string {
@@ -39,4 +41,13 @@ export function loadSigningKeySeed(identityId: string): Uint8Array | null {
 /** Removes any locally-stored signing key for `identityId` — used on logout. */
 export function clearSigningKeySeed(identityId: string): void {
   localStorage.removeItem(storageKey(identityId))
+}
+
+/** Removes stored signing keys filed under an id that is not a current-format identity id. */
+export function clearStaleSigningKeys(): void {
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith(STORAGE_PREFIX) && !isIdentityId(key.slice(STORAGE_PREFIX.length))) {
+      localStorage.removeItem(key)
+    }
+  }
 }

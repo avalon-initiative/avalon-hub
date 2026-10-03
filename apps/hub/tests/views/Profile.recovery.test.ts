@@ -8,9 +8,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Profile from '../../src/views/Profile.vue'
 import { useSessionStore } from '../../src/api/session'
 import { mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const profile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -53,10 +54,10 @@ async function mountProfile(responses: Record<string, unknown>) {
 describe('Recovery guardians card', () => {
   it('lists friends as guardian candidates', async () => {
     const wrapper = await mountProfile({
-      '/friends': [{ a: 'id-1', b: 'friend-1', since: 'now' }],
-      '/presence': [{ identity_id: 'friend-1', status: 'Online' }],
+      '/friends': [{ a: testIdentityId('id-1'), b: testIdentityId('friend-1'), since: 'now' }],
+      '/presence': [{ identity_id: testIdentityId('friend-1'), status: 'Online' }],
       '/identities/profiles': [
-        { identity_id: 'friend-1', display_name: 'Bramble', avatar_url: null },
+        { identity_id: testIdentityId('friend-1'), display_name: 'Bramble', avatar_url: null },
       ],
     })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Bramble'))
@@ -73,7 +74,7 @@ describe('In-progress recovery notice', () => {
     const wrapper = await mountProfile({
       '/me/recovery/status': {
         id: 'req-1',
-        identity_id: 'id-1',
+        identity_id: testIdentityId('id-1'),
         status: 'delay',
         threshold: 2,
         approvals_count: 2,
@@ -98,7 +99,7 @@ describe('Guardian-of card (issue #443)', () => {
     const wrapper = await mountProfile({
       '/me/recovery/guardian-of': [
         {
-          identity_id: 'owner-1',
+          identity_id: testIdentityId('owner-1'),
           display_name: 'Bramble',
           added_at: 'now',
         },
@@ -114,7 +115,7 @@ describe('Guardian-of card (issue #443)', () => {
     await flushPromises()
 
     const resignCall = (fetch as ReturnType<typeof vi.fn>).mock.calls.find(([url, init]) =>
-      String(url).includes('/me/recovery/guardian-of/owner-1') &&
+      String(url).includes(`/me/recovery/guardian-of/${testIdentityId('owner-1')}`) &&
       (init as RequestInit | undefined)?.method === 'DELETE',
     )
     expect(resignCall).toBeTruthy()
