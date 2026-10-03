@@ -11,9 +11,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Profile from '../../src/views/Profile.vue'
 import { useSessionStore } from '../../src/api/session'
 import { mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const baseProfile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -37,7 +38,7 @@ const guildBase = {
   name: 'Dragon Hunters',
   tag: 'DRGN',
   description: 'A guild.',
-  owner: 'id-owner',
+  owner: testIdentityId('id-owner'),
   created_at: 'now',
   member_count: 1,
   integrators: [],

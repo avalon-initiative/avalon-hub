@@ -11,6 +11,7 @@ import HubShell from '../../src/views/HubShell.vue'
 import Profile from '../../src/views/Profile.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 // A trivial stand-in for the real `Guild.vue` at the target route — this
 // suite is only exercising HubShell's own state after selecting an alert,
@@ -18,7 +19,7 @@ import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
 const GuildStub = { render: () => h('div', 'guild view') }
 
 const profile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Avalon User',
   avatar_url: null,
@@ -29,7 +30,7 @@ const announcement = {
   channel_id: 'chan-1',
   channel_name: 'announcements',
   guild_id: 'guild-1',
-  author: 'id-2',
+  author: testIdentityId('id-2'),
   body: 'server maintenance tonight',
   sent_at: '2026-09-14T12:00:00Z',
 }
@@ -73,7 +74,7 @@ afterEach(() => {
 async function mountAtProfile(announcements: unknown[]) {
   mockFetchByPath({
     '/me': profile,
-    '/me/presence': { identity_id: 'id-1', status: 'Online', playing: null, updated_at: 'now' },
+    '/me/presence': { identity_id: testIdentityId('id-1'), status: 'Online', playing: null, updated_at: 'now' },
     '/me/guild-announcements': announcements,
     '/ledger/sth/latest': {
       tree_size: 1,

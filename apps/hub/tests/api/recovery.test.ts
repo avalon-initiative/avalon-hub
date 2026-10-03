@@ -22,6 +22,7 @@ vi.mock('@avalon-initiative/protocol-sdk/src/crypto/webauthn', () => ({
 }))
 
 import { startRecovery } from '../../src/api/recovery'
+import { testIdentityId } from '../testing/identityIds'
 
 beforeEach(() => {
   runRegistrationCeremonyMock.mockReset()
@@ -54,7 +55,7 @@ describe('startRecovery', () => {
         json: () =>
           Promise.resolve({
             id: 'req-1',
-            identity_id: 'identity-1',
+            identity_id: testIdentityId('identity-1'),
             status: 'pending_approvals',
             threshold: 2,
             approvals_count: 0,
@@ -65,7 +66,7 @@ describe('startRecovery', () => {
           Promise.resolve(
             JSON.stringify({
               id: 'req-1',
-              identity_id: 'identity-1',
+              identity_id: testIdentityId('identity-1'),
               status: 'pending_approvals',
               threshold: 2,
               approvals_count: 0,
@@ -76,7 +77,7 @@ describe('startRecovery', () => {
       })
     vi.stubGlobal('fetch', fetchMock)
 
-    const result = await startRecovery('identity-1', 'new phone')
+    const result = await startRecovery(testIdentityId('identity-1'), 'new phone')
 
     expect(result.status).toBe('pending_approvals')
     expect(runRegistrationCeremonyMock).toHaveBeenCalledWith({ fake: true })
@@ -86,7 +87,7 @@ describe('startRecovery', () => {
     // No bearer token — this is the one deliberately unauthenticated path.
     expect(startOptions.headers.Authorization).toBeUndefined()
     expect(JSON.parse(startOptions.body)).toEqual({
-      identity_id: 'identity-1',
+      identity_id: testIdentityId('identity-1'),
       device_label: 'new phone',
     })
 

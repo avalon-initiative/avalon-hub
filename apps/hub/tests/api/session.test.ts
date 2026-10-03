@@ -12,7 +12,8 @@ const { FakeUnauthorized, FakeRateLimited, resume, resumeWithKey } = vi.hoisted(
   resumeWithKey: vi.fn(),
 }))
 
-vi.mock('@avalon-initiative/protocol-sdk', () => ({
+vi.mock('@avalon-initiative/protocol-sdk', async (importActual) => ({
+  ...(await importActual<typeof import('@avalon-initiative/protocol-sdk')>()),
   UnauthorizedError: FakeUnauthorized,
   RateLimitedError: FakeRateLimited,
   AvalonClient: class {
@@ -22,8 +23,9 @@ vi.mock('@avalon-initiative/protocol-sdk', () => ({
 }))
 
 import { useSessionStore } from '../../src/api/session'
+import { testIdentityId } from '../testing/identityIds'
 
-const fakeSession = { token: () => 'tok-1', identity: () => ({ id: 'id-1' }) }
+const fakeSession = { token: () => 'tok-1', identity: () => ({ id: testIdentityId('id-1') }) }
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -122,5 +124,39 @@ describe('session store resume backoff', () => {
     await done
     expect(resume).toHaveBeenCalledTimes(2)
     vi.useRealTimers()
+  })
+})
+
+describe('session store stale identity ids', () => {
+  const OLD_UUID = '33333333-4444-5555-6666-777777777777'
+
+  it('clears a stored session and keys filed under a UUID id without calling the server', async () => {
+    localStorage.setItem('avalon:session:token', 'tok-1')
+    localStorage.setItem('avalon:session:identityId', OLD_UUID)
+    localStorage.setItem(`avalon:signingKey:${OLD_UUID}`, 'c2VlZA==')
+    const s = useSessionStore()
+    await s.initialize()
+    expect(resume).not.toHaveBeenCalled()
+    expect(resumeWithKey).not.toHaveBeenCalled()
+    expect(localStorage.getItem('avalon:session:token')).toBeNull()
+    expect(localStorage.getItem('avalon:session:identityId')).toBeNull()
+    expect(localStorage.getItem(`avalon:signingKey:${OLD_UUID}`)).toBeNull()
+    expect(s.isAuthenticated()).toBe(false)
+    expect(s.resumeFailed).toBe(false)
+    expect(s.staleSessionCleared).toBe(true)
+    expect(s.ready).toBe(true)
+  })
+
+  it('keeps a current-format session and its signing key', async () => {
+    const id = testIdentityId('id-1')
+    localStorage.setItem('avalon:session:token', 'tok-1')
+    localStorage.setItem('avalon:session:identityId', id)
+    localStorage.setItem(`avalon:signingKey:${id}`, 'c2VlZA==')
+    resumeWithKey.mockResolvedValue(fakeSession)
+    const s = useSessionStore()
+    await s.initialize()
+    expect(s.isAuthenticated()).toBe(true)
+    expect(s.staleSessionCleared).toBe(false)
+    expect(localStorage.getItem(`avalon:signingKey:${id}`)).not.toBeNull()
   })
 })

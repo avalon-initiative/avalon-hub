@@ -14,6 +14,7 @@ import { useMyGuilds } from '../composables/useMyGuilds'
 import { useMyConnections } from '../composables/useMyConnections'
 import { useLatestGuildMessages } from '../composables/useLatestGuildMessages'
 import { useSessionStore } from '../api/session'
+import { shortId } from '../utils/identity'
 import styles from '../styles/Home.module.scss'
 
 const RECENT_ACTIVITY_LIMIT = 6
@@ -175,8 +176,8 @@ const quickActions = [
           </p>
           <ul v-else :class="styles.friendList">
             <li v-for="friend in onlineFriends" :key="friend.identityId" :class="styles.friend">
-              <AvalonAvatar :name="friend.displayName ?? friend.identityId" size="md" />
-              <span :class="styles.friendName">{{ friend.displayName ?? friend.identityId }}</span>
+              <AvalonAvatar :name="friend.displayName ?? shortId(friend.identityId)" size="md" />
+              <span :class="styles.friendName">{{ friend.displayName ?? shortId(friend.identityId) }}</span>
               <AvalonPresenceBadge :status="friend.status" />
             </li>
           </ul>

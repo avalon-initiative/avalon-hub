@@ -9,6 +9,7 @@ import type { RollbackCandidate } from '@avalon-initiative/protocol-sdk'
 import Rollback from '../../src/views/Rollback.vue'
 import { useSessionStore } from '../../src/api/session'
 import { mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const candidatesMock = vi.fn()
 const reverseMock = vi.fn()
@@ -33,7 +34,7 @@ function candidate(over: Partial<RollbackCandidate>): RollbackCandidate {
 }
 
 const profile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,

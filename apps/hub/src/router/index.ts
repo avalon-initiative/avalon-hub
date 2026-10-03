@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useSessionStore } from '../api/session'
+import { isIdentityId } from '@avalon-initiative/protocol-sdk'
 import { invalidateGuildReadsOnLeave } from '../api/sharedReads'
 
 const router = createRouter({
@@ -45,7 +46,12 @@ const router = createRouter({
         { path: 'friends', name: 'friends', component: () => import('../views/Friends.vue') },
         // Issue #393: a read-only profile card for another identity,
         // reachable from a friend row or a guild member row.
-        { path: 'users/:id', name: 'user-profile', component: () => import('../views/UserProfile.vue') },
+        {
+          path: 'users/:id',
+          name: 'user-profile',
+          component: () => import('../views/UserProfile.vue'),
+          beforeEnter: (to) => (isIdentityId(to.params.id) ? true : { name: 'friends' }),
+        },
         { path: 'rollback', name: 'rollback', component: () => import('../views/Rollback.vue') },
         { path: 'activity', name: 'activity', component: () => import('../views/Activity.vue') },
         {

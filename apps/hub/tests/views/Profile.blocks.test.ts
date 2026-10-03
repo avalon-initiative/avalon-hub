@@ -9,9 +9,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Profile from '../../src/views/Profile.vue'
 import { useSessionStore } from '../../src/api/session'
 import { mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const profile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -55,8 +56,8 @@ describe('Profile blocked users', () => {
     mockFetchByPath({
       '/me': profile,
       '/me/passkeys': [],
-      '/blocks': [{ blocked: 'id-2', created_at: 'now' }],
-      '/identities/profiles': [{ identity_id: 'id-2', display_name: 'Grief', avatar_url: null }],
+      '/blocks': [{ blocked: testIdentityId('id-2'), created_at: 'now' }],
+      '/identities/profiles': [{ identity_id: testIdentityId('id-2'), display_name: 'Grief', avatar_url: null }],
     })
     await loginTestSession()
 
@@ -72,7 +73,7 @@ describe('Profile blocked users', () => {
 
     const unblockCall = (fetch as ReturnType<typeof vi.fn>).mock.calls.find(([url, init]) => {
       const method = (init as RequestInit | undefined)?.method
-      return String(url).endsWith('/blocks/id-2') && method === 'DELETE'
+      return String(url).endsWith(`/blocks/${testIdentityId('id-2')}`) && method === 'DELETE'
     })
     expect(unblockCall).toBeTruthy()
   })
@@ -87,9 +88,9 @@ describe('Profile blocked users', () => {
     const wrapper = mount(Profile, { global: { plugins: [router] } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Blocked users'))
 
-    // Issue #510: only a real UUID skips the handle-resolve step now
+    // Issue #510: only a canonical id skips the handle-resolve step now
     // (display_name is the handle, so anything else is treated as one).
-    const targetId = '33333333-4444-5555-6666-777777777777'
+    const targetId = testIdentityId('target')
     await wrapper.find('input[placeholder="identity id or display name"]').setValue(targetId)
     const blockButton = wrapper.findAll('button').find((b) => b.text() === 'Block')!
     await blockButton.trigger('click')

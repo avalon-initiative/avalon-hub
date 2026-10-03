@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Friends from '../../src/views/Friends.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 function testRouter() {
   return createRouter({
@@ -17,7 +18,7 @@ function testRouter() {
 }
 
 const profile = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -60,7 +61,7 @@ describe('Friends user search (issue #205)', () => {
     const wrapper = await mountFriends({
       '/identities/search': {
         results: [
-          { identity_id: 'other-1', display_name: 'Alice', avatar_url: null },
+          { identity_id: testIdentityId('other-1'), display_name: 'Alice', avatar_url: null },
         ],
       },
     })

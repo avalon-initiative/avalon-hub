@@ -9,9 +9,12 @@ import Friends from '../../src/views/Friends.vue'
 import UserProfile from '../../src/views/UserProfile.vue'
 import { useSessionStore } from '../../src/api/session'
 import { FakeWebSocket, MockErrorResponse, mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
+
+const FRIEND_ID = testIdentityId('id-friend')
 
 const selfProfile = {
-  identity_id: 'id-self',
+  identity_id: testIdentityId('id-self'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,
@@ -44,11 +47,11 @@ describe('viewing another user from Friends', () => {
   it('navigates to the profile card when a friend row is clicked', async () => {
     mockFetchByPath({
       '/me': selfProfile,
-      '/friends': [{ a: 'id-self', b: 'id-friend', since: 'now' }],
+      '/friends': [{ a: testIdentityId('id-self'), b: FRIEND_ID, since: 'now' }],
       '/friends/requests': [],
-      '/presence': [{ identity_id: 'id-friend', status: 'Online', playing: null, updated_at: 'now' }],
+      '/presence': [{ identity_id: FRIEND_ID, status: 'Online', playing: null, updated_at: 'now' }],
       '/identities/profiles': [
-        { identity_id: 'id-friend', display_name: 'Ilya', avatar_url: null },
+        { identity_id: FRIEND_ID, display_name: 'Ilya', avatar_url: null },
       ],
       '/people/discover': { candidates: [] },
     })
@@ -65,7 +68,7 @@ describe('viewing another user from Friends', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('user-profile')
-    expect(router.currentRoute.value.params.id).toBe('id-friend')
+    expect(router.currentRoute.value.params.id).toBe(FRIEND_ID)
   })
 })
 
@@ -86,8 +89,8 @@ describe('UserProfile', () => {
       '/friends': [],
       '/friends/requests': [],
       '/blocks': [],
-      '/identities/id-friend/profile': {
-        identity_id: 'id-friend',
+      [`/identities/${FRIEND_ID}/profile`]: {
+        identity_id: FRIEND_ID,
         identity_created_at: 'now',
         display_name: 'Ilya',
         avatar_url: null,
@@ -103,12 +106,12 @@ describe('UserProfile', () => {
         main_guild: null,
         effective_main_guild: null,
       },
-      '/presence': [{ identity_id: 'id-friend', status: 'DoNotDisturb', playing: null, updated_at: 'now' }],
+      '/presence': [{ identity_id: FRIEND_ID, status: 'DoNotDisturb', playing: null, updated_at: 'now' }],
     })
     await loginSession()
 
     const router = testRouterForCard()
-    router.push('/users/id-friend')
+    router.push(`/users/${FRIEND_ID}`)
     await router.isReady()
     const wrapper = mount(UserProfile, { global: { plugins: [router] } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Ilya'))
@@ -143,7 +146,7 @@ describe('UserProfile', () => {
   // Issue #460.
   function otherProfile(overrides: Record<string, unknown> = {}) {
     return {
-      identity_id: 'id-friend',
+      identity_id: FRIEND_ID,
       identity_created_at: 'now',
       display_name: 'Ilya',
       avatar_url: null,
@@ -168,7 +171,7 @@ describe('UserProfile', () => {
       '/friends': [],
       '/friends/requests': [],
       '/blocks': [],
-      '/identities/id-friend/profile': otherProfile({
+      [`/identities/${FRIEND_ID}/profile`]: otherProfile({
         banner_url: 'https://example.com/banner.png',
         effective_main_guild: 'g1',
       }),
@@ -178,7 +181,7 @@ describe('UserProfile', () => {
     await loginSession()
 
     const router = testRouterForCard()
-    router.push('/users/id-friend')
+    router.push(`/users/${FRIEND_ID}`)
     await router.isReady()
     const wrapper = mount(UserProfile, { global: { plugins: [router] } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Ilya'))
@@ -193,14 +196,14 @@ describe('UserProfile', () => {
       '/friends': [],
       '/friends/requests': [],
       '/blocks': [],
-      '/identities/id-friend/profile': otherProfile(),
+      [`/identities/${FRIEND_ID}/profile`]: otherProfile(),
       '/presence': [],
-      '/friends/requests-created': { id: 'r1', from: 'id-self', to: 'id-friend', requested_at: 'now' },
+      '/friends/requests-created': { id: 'r1', from: testIdentityId('id-self'), to: FRIEND_ID, requested_at: 'now' },
     })
     await loginSession()
 
     const router = testRouterForCard()
-    router.push('/users/id-friend')
+    router.push(`/users/${FRIEND_ID}`)
     await router.isReady()
     const wrapper = mount(UserProfile, { global: { plugins: [router] } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Ilya'))
@@ -215,7 +218,7 @@ describe('UserProfile', () => {
     })
     expect(requestCall).toBeTruthy()
     const body = JSON.parse((requestCall![1] as RequestInit).body as string)
-    expect(body.to).toBe('id-friend')
+    expect(body.to).toBe(FRIEND_ID)
   })
 
   it('blocks and then unblocks the viewed identity', async () => {
@@ -224,13 +227,13 @@ describe('UserProfile', () => {
       '/friends': [],
       '/friends/requests': [],
       '/blocks': [],
-      '/identities/id-friend/profile': otherProfile(),
+      [`/identities/${FRIEND_ID}/profile`]: otherProfile(),
       '/presence': [],
     })
     await loginSession()
 
     const router = testRouterForCard()
-    router.push('/users/id-friend')
+    router.push(`/users/${FRIEND_ID}`)
     await router.isReady()
     const wrapper = mount(UserProfile, { global: { plugins: [router] } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Ilya'))
@@ -245,7 +248,7 @@ describe('UserProfile', () => {
     })
     expect(blockCall).toBeTruthy()
     const body = JSON.parse((blockCall![1] as RequestInit).body as string)
-    expect(body.identity_id).toBe('id-friend')
+    expect(body.identity_id).toBe(FRIEND_ID)
   })
 
   // Issue #465.
@@ -255,9 +258,9 @@ describe('UserProfile', () => {
       '/friends': [],
       '/friends/requests': [],
       '/blocks': [],
-      '/identities/id-friend/profile': otherProfile(),
+      [`/identities/${FRIEND_ID}/profile`]: otherProfile(),
       '/presence': [],
-      '/identities/id-friend/integrator-data': [
+      [`/identities/${FRIEND_ID}/integrator-data`]: [
         {
           schema: 'game:ashen-realms:schema:1',
           integrator_id: 'int-1',
@@ -270,7 +273,7 @@ describe('UserProfile', () => {
     await loginSession()
 
     const router = testRouterForCard()
-    router.push('/users/id-friend')
+    router.push(`/users/${FRIEND_ID}`)
     await router.isReady()
     const wrapper = mount(UserProfile, { global: { plugins: [router] } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Ashen Realms'))
@@ -285,14 +288,14 @@ describe('UserProfile', () => {
       '/friends': [],
       '/friends/requests': [],
       '/blocks': [],
-      '/identities/id-friend/profile': otherProfile(),
+      [`/identities/${FRIEND_ID}/profile`]: otherProfile(),
       '/presence': [],
-      '/identities/id-friend/integrator-data': [],
+      [`/identities/${FRIEND_ID}/integrator-data`]: [],
     })
     await loginSession()
 
     const router = testRouterForCard()
-    router.push('/users/id-friend')
+    router.push(`/users/${FRIEND_ID}`)
     await router.isReady()
     const wrapper = mount(UserProfile, { global: { plugins: [router] } })
     await vi.waitFor(() => expect(wrapper.text()).toContain('Ilya'))

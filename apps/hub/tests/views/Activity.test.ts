@@ -8,9 +8,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Activity from '../../src/views/Activity.vue'
 import { useSessionStore } from '../../src/api/session'
 import { mockFetchByPath } from '../testing/fakes'
+import { testIdentityId } from '../testing/identityIds'
 
 const profile = {
-  identity_id: 'id-self',
+  identity_id: testIdentityId('id-self'),
   identity_created_at: 'now',
   display_name: 'Nova',
   avatar_url: null,

@@ -26,7 +26,8 @@ import { markGuardianOfSeen } from '../api/notifications'
 import { useMyGuilds } from '../composables/useMyGuilds'
 import { shouldShowSinglePasskeyWarning } from '../utils/singlePasskeyWarning'
 import { listIanaTimezones } from '../utils/timezones'
-import { isIdentityId } from '../utils/identity'
+import ShortIdentityId from '../components/ShortIdentityId.vue'
+import { resolveIdentityTarget, shortId } from '../utils/identity'
 import {
   AvalonAvatar,
   AvalonButton,
@@ -195,7 +196,7 @@ async function onBlockById() {
   blockingById.value = true
   try {
     const input = blockByIdInput.value.trim()
-    const identityId = isIdentityId(input) ? input : await s.resolveHandle(input)
+    const identityId = await resolveIdentityTarget(s, input)
     await s.block(identityId)
     blockByIdInput.value = ''
     await refreshBlockedUsers()
@@ -923,7 +924,7 @@ async function onResignGuardian(identityId: string) {
       <AvalonAvatar :src="avatarUrl || null" :name="displayName" size="xl" />
       <div :class="styles.heroText">
         <h1 :class="page.title">{{ displayName }}</h1>
-        <p :class="styles.identityId">{{ identityId }}</p>
+        <p :class="styles.identityId"><ShortIdentityId :id="identityId" /></p>
       </div>
       <div :class="styles.heroActions">
         <AvalonButton label="Log out" variant="secondary" @click="onLogout" />
@@ -1003,7 +1004,7 @@ async function onResignGuardian(identityId: string) {
       <p v-if="blockedUsers.length === 0" :class="page.empty">You haven't blocked anyone.</p>
       <ul v-else :class="styles.list">
         <li v-for="blocked in blockedUsers" :key="blocked.identityId" :class="styles.guardianRow">
-          <span>{{ blocked.displayName ?? blocked.identityId }}</span>
+          <span>{{ blocked.displayName ?? shortId(blocked.identityId) }}</span>
           <AvalonButton
             :label="unblockingId === blocked.identityId ? 'Unblocking…' : 'Unblock'"
             variant="secondary"
@@ -1328,7 +1329,7 @@ async function onResignGuardian(identityId: string) {
                 @change="onToggleGuardian(friend.identityId)"
               />
               <label :for="`guardian-${friend.identityId}`">
-                {{ friend.displayName ?? friend.identityId }}
+                {{ friend.displayName ?? shortId(friend.identityId) }}
               </label>
             </li>
           </ul>
@@ -1370,7 +1371,7 @@ async function onResignGuardian(identityId: string) {
               :class="styles.device"
             >
               <span :class="styles.listLabel">
-                {{ guardianProfileNames[summary.request.identityId] ?? summary.request.identityId }}
+                {{ guardianProfileNames[summary.request.identityId] ?? shortId(summary.request.identityId) }}
               </span>
               <span :class="styles.listDetail">
                 {{ summary.request.approvalsCount }} of {{ summary.request.threshold }} approvals ·

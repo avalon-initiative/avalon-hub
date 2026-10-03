@@ -61,7 +61,7 @@ import { useGuildChat } from '../composables/useGuildChat'
 import { useGuildDetail } from '../composables/useGuildDetail'
 import { useRsvpRoster } from '../composables/useRsvpRoster'
 import { useSessionStore } from '../api/session'
-import { isIdentityId } from '../utils/identity'
+import { resolveIdentityTarget, shortId } from '../utils/identity'
 import local from '../styles/Guild.module.scss'
 import styles from '../styles/page.module.scss'
 
@@ -1072,7 +1072,7 @@ function cancelInvite() {
 
 // Accepts either a raw identity id or a display_name handle,
 // the same convenience Friends.vue's onAddFriend already
-// offers — a handle (anything that isn't a UUID) is resolved to an
+// offers — a handle (anything that isn't a canonical id) is resolved to an
 // identity id first, since createGuildInvite always targets an identity
 // id on the wire.
 async function onInvite() {
@@ -1083,7 +1083,7 @@ async function onInvite() {
   inviting.value = true
   try {
     const input = inviteIdentityId.value.trim()
-    const to = isIdentityId(input) ? input : await s.resolveHandle(input)
+    const to = await resolveIdentityTarget(s, input)
     const invite = await s.createGuildInvite(guildId.value, to)
     // No endpoint lists a user's own pending guild invites yet (a real
     // gap — see avalon-docs/protocol/guilds.md's correction note), so the
@@ -1652,7 +1652,7 @@ const {
               v-for="member in group.members"
               :key="member.identityId"
               :identity-id="member.identityId"
-              :display-name="member.displayName"
+              :display-name="member.displayName ?? shortId(member.identityId)"
               :status="member.status"
               :role-name="group.roleName"
               :role-variant="roleVariantForIndex(member.roleIndex)"
@@ -1878,7 +1878,7 @@ const {
                 v-for="message in messages"
                 :key="message.id"
                 :author-id="message.author"
-                :author-display-name="authorNames[message.author]"
+                :author-display-name="authorNames[message.author] ?? shortId(message.author)"
                 :body="message.body"
                 :sent-at-label="new Date(message.sentAt).toLocaleString()"
                 :can-delete="canDeleteMessage"

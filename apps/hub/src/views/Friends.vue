@@ -19,7 +19,7 @@ import type { Suggestion } from '../api/discovery'
 import type { SearchResultIdentity } from '@avalon-initiative/protocol-sdk'
 import { useFriendsPresence } from '../composables/useFriendsPresence'
 import { useSessionStore } from '../api/session'
-import { isIdentityId } from '../utils/identity'
+import { resolveIdentityTarget, shortId } from '../utils/identity'
 import styles from '../styles/page.module.scss'
 
 const session = useSessionStore()
@@ -136,7 +136,7 @@ function cancelAddFriend() {
 }
 
 // Accepts either a raw identity id or a display_name handle —
-// a handle (anything that isn't a UUID) is resolved to an identity id
+// a handle (anything that isn't a canonical id) is resolved to an identity id
 // first, since createFriendRequest always targets an identity id on the
 // wire.
 async function onAddFriend() {
@@ -146,7 +146,7 @@ async function onAddFriend() {
   addingFriend.value = true
   try {
     const input = addFriendId.value.trim()
-    const to = isIdentityId(input) ? input : await s.resolveHandle(input)
+    const to = await resolveIdentityTarget(s, input)
     await s.createFriendRequest(to)
     cancelAddFriend()
     await refresh()
@@ -226,7 +226,7 @@ async function onMessageFriend(identityId: string) {
             v-for="friend in onlineFriends"
             :key="friend.identityId"
             :identity-id="friend.identityId"
-            :display-name="friend.displayName"
+            :display-name="friend.displayName ?? shortId(friend.identityId)"
             :status="friend.status"
             @message="onMessageFriend(friend.identityId)"
             @remove="onRemoveFriend(friend.identityId)"
@@ -240,7 +240,7 @@ async function onMessageFriend(identityId: string) {
             v-for="friend in offlineFriends"
             :key="friend.identityId"
             :identity-id="friend.identityId"
-            :display-name="friend.displayName"
+            :display-name="friend.displayName ?? shortId(friend.identityId)"
             :status="friend.status"
             @message="onMessageFriend(friend.identityId)"
             @remove="onRemoveFriend(friend.identityId)"
@@ -280,7 +280,7 @@ async function onMessageFriend(identityId: string) {
             v-for="request in incomingRequests"
             :key="request.id"
             :identity-id="request.otherIdentityId"
-            :display-name="request.displayName"
+            :display-name="request.displayName ?? shortId(request.otherIdentityId)"
             direction="incoming"
             @accept="onAcceptRequest(request.id)"
             @remove="onRemoveRequest(request.id)"
@@ -289,7 +289,7 @@ async function onMessageFriend(identityId: string) {
             v-for="request in outgoingRequests"
             :key="request.id"
             :identity-id="request.otherIdentityId"
-            :display-name="request.displayName"
+            :display-name="request.displayName ?? shortId(request.otherIdentityId)"
             direction="outgoing"
             @remove="onRemoveRequest(request.id)"
           />
@@ -314,7 +314,7 @@ async function onMessageFriend(identityId: string) {
             v-for="result in searchResults"
             :key="result.identityId"
             :identity-id="result.identityId"
-            :display-name="result.displayName"
+            :display-name="result.displayName ?? shortId(result.identityId)"
             :avatar-url="result.avatarUrl"
             :requested="requestedSearchIds.has(result.identityId)"
             @add="onAddFromSearch(result.identityId)"
@@ -330,7 +330,7 @@ async function onMessageFriend(identityId: string) {
             v-for="suggestion in suggestions"
             :key="suggestion.identityId"
             :identity-id="suggestion.identityId"
-            :display-name="suggestion.displayName"
+            :display-name="suggestion.displayName ?? shortId(suggestion.identityId)"
             :requested="requestedSuggestionIds.has(suggestion.identityId)"
             @add="onAddSuggestion(suggestion.identityId)"
           />

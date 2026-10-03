@@ -23,17 +23,18 @@ vi.mock('@avalon-initiative/protocol-sdk/src/crypto/webauthn', () => ({
 
 import RecoverIdentity from '../../src/views/RecoverIdentity.vue'
 import { useSessionStore } from '../../src/api/session'
+import { testIdentityId } from '../testing/identityIds'
 
 const requestBase = {
   id: 'req1',
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   threshold: 2,
   approvals_count: 2,
   requested_at: '2026-01-01T00:00:00Z',
 }
 
 const meResponse = {
-  identity_id: 'id-1',
+  identity_id: testIdentityId('id-1'),
   identity_created_at: '2026-01-01T00:00:00Z',
   display_name: 'Recovered User',
   avatar_url: null,
@@ -87,7 +88,7 @@ afterEach(() => {
 })
 
 async function startRecovery(wrapper: ReturnType<typeof mount>) {
-  await wrapper.find('input').setValue('id-1')
+  await wrapper.find('input').setValue(testIdentityId('id-1'))
   await wrapper.find('form').trigger('submit')
   await flushPromises()
 }

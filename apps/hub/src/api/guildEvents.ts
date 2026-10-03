@@ -4,6 +4,7 @@
 // composition — following the same split guildChat.ts already documents.
 import type { AvalonRsvpRosterGroup } from '@avalon-initiative/common-ui'
 import type { GuildEvent, RsvpRosterEntry, RsvpStatus } from '@avalon-initiative/protocol-sdk'
+import { shortId } from '../utils/identity'
 
 // Matches crates/server/src/guild_events.rs::EVENT_TITLE_MAX_CHARS exactly
 // — surfaced here so a create/edit form can validate client-side before
@@ -143,7 +144,7 @@ export function groupRsvpRoster(
 ): AvalonRsvpRosterGroup[] {
   const buckets: Record<RsvpStatus, string[]> = { going: [], maybe: [], not_going: [] }
   for (const entry of entries) {
-    buckets[entry.status].push(namesById[entry.identityId] ?? entry.identityId)
+    buckets[entry.status].push(namesById[entry.identityId] ?? shortId(entry.identityId))
   }
   return RSVP_STATUS_ORDER.map((status) => ({
     status,

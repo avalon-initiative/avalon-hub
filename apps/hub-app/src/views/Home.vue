@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 import { AvalonAvatar, AvalonButton, AvalonCard } from '@avalon-initiative/common-ui'
 import type { Profile } from '@avalon-initiative/protocol-sdk'
 import { useSessionStore } from '../api/session'
+import ShortIdentityId from '../components/ShortIdentityId.vue'
 import styles from '../styles/Home.module.scss'
 
 const router = useRouter()
@@ -40,7 +41,7 @@ async function onLogout() {
       <div v-if="profile" :class="styles.profile">
         <AvalonAvatar :name="profile.displayName" :src="profile.avatarUrl" size="lg" />
         <p :class="styles.name">{{ profile.displayName }}</p>
-        <p :class="styles.id">{{ profile.identityId }}</p>
+        <p :class="styles.id"><ShortIdentityId :id="profile.identityId" /></p>
       </div>
       <p v-else-if="error" :class="styles.error">{{ error }}</p>
       <p v-else :class="styles.loading">Loading…</p>

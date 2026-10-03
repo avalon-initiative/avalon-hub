@@ -3,6 +3,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { AvalonAuthCard, AvalonForm, AvalonTextField } from '@avalon-initiative/common-ui'
+import { isIdentityId } from '@avalon-initiative/protocol-sdk'
 import { avalonClient, useSessionStore } from '../api/session'
 import { loadSigningKeySeed } from '../api/signingKeyStorage'
 import AuthLayout from './AuthLayout.vue'
@@ -17,12 +18,17 @@ const error = ref('')
 
 async function onSubmit() {
   error.value = ''
+  const id = identityId.value.trim()
+  if (!isIdentityId(id)) {
+    error.value = 'Enter a valid identity id: 64 lowercase hex characters.'
+    return
+  }
   submitting.value = true
   try {
-    const accountSession = await avalonClient().loginWithIdentityId(identityId.value)
+    const accountSession = await avalonClient().loginWithIdentityId(id)
     // The reconnect-across-nodes signing key, when this device already holds
     // one for this identity; a device without one logs in without it.
-    const secretKey = loadSigningKeySeed(identityId.value)
+    const secretKey = loadSigningKeySeed(id)
     if (secretKey) await accountSession.attachSigningKey(secretKey)
     await session.setSession(accountSession)
     await router.push({ name: 'home' })
@@ -37,6 +43,9 @@ async function onSubmit() {
 <template>
   <AuthLayout>
     <AvalonAuthCard title="Welcome to Avalon" subtitle="Your identity, wherever you are.">
+      <p v-if="session.staleSessionCleared" :class="styles.hint">
+        You were signed out because Avalon's identity ids changed format. Please log in again with your new identity id.
+      </p>
       <AvalonForm submit-label="Log in with passkey" :submitting="submitting" :error="error" @submit="onSubmit">
         <AvalonTextField v-model="identityId" label="Identity id" placeholder="Your identity id" />
       </AvalonForm>
